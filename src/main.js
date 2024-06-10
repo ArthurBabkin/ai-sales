@@ -1,13 +1,6 @@
 const WhatsAppBot = require("@green-api/whatsapp-bot");
 const { initializeApp } = require("firebase/app");
-const {
-  getDatabase,
-  ref,
-  get,
-  set,
-  child,
-  update,
-} = require("firebase/database");
+const { getDatabase } = require("firebase/database");
 const { get_llm_response } = require("./api");
 const { HELP_MESSAGE, RESET_MESSAGE, SYSTEM_MESSAGE } = require("./constants");
 const {
@@ -15,6 +8,7 @@ const {
   getMessages,
   addMessage,
   getProducts,
+  addBuyer,
 } = require("./database");
 
 const firebaseConfig = {
@@ -94,6 +88,7 @@ bot.on("message", async (ctx) => {
 
     if (message === "SELL") {
       message = "Trigger activated";
+      await addBuyer(database, userId);
     }
 
     await ctx.reply(message);
