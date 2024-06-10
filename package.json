@@ -1,0 +1,19 @@
+{
+  "name": "inno-whatsapp-interns",
+  "version": "1.0.0",
+  "description": "- Create firebase project realtime [https://firebase.google.com/docs/web/setup](https://firebase.google.com/docs/web/setup). - Create an account here [https://green-api.com/](https://green-api.com/) use free account. - Ask Hamza Salem @enghamzasalem for URL for LLM usage or use Google gemini [https://makersuite.google.com/](https://makersuite.google.com/). - Setup node js project and setup dependencies",
+  "main": "main.js",
+  "scripts": {
+    "start": "node --env-file=.env src/main.js",
+    "start-container": "node src/main.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@green-api/whatsapp-bot": "^0.1.3",
+    "axios": "^1.7.2",
+    "firebase": "^10.12.2",
+    "request": "^2.88.2"
+  }
+}
