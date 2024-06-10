@@ -30,10 +30,27 @@ const firebaseConfig = {
 app = initializeApp(firebaseConfig);
 database = getDatabase(app);
 
+function squeezeMessages(
+  messages,
+  maxSequenceLength = 30,
+  maxMessageLength = 500
+) {
+  messages = messages.slice(-maxSequenceLength);
+  for (i = 0; i < messages.length; i++) {
+    content = messages[i]["content"];
+    if (content.length > maxMessageLength) {
+      messages[i]["content"] =
+        content.substring(content.length - maxMessageLength) + "...";
+    }
+  }
+  return messages;
+}
+
 const bot = new WhatsAppBot({
   idInstance: process.env.ID_INSTANCE,
   apiTokenInstance: process.env.API_TOKEN_INSTANCE,
 });
+
 bot.command("reset", async (ctx) => {
   const userId = ctx.update.message.chat.id;
   await resetUser(database, userId);
@@ -66,7 +83,7 @@ bot.on("message", async (ctx) => {
       process.env.LLM_URL,
       process.env.DEEPSEEK_TOKEN,
       "deepseek-chat",
-      SYSTEM_MESSAGE + "\n" + JSON.stringify(products)
+      SYSTEM_MESSAGE + "\n" + JSON.stringify(squeezeMessages(products))
     );
 
     message = response;
