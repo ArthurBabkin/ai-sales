@@ -73,11 +73,11 @@ bot.on("message", async (ctx) => {
   try {
     const products = await getProducts(database);
     const response = await get_llm_response(
-      messages,
+      squeezeMessages(messages),
       process.env.LLM_URL,
       process.env.DEEPSEEK_TOKEN,
       "deepseek-chat",
-      SYSTEM_MESSAGE + "\n" + JSON.stringify(squeezeMessages(products))
+      SYSTEM_MESSAGE + "\n" + JSON.stringify(products)
     );
 
     message = response;

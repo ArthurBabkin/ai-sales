@@ -86,7 +86,7 @@ async function addBuyer(database, userId) {
   try {
     buyers = await getBuyers(database);
     buyers.push(userId);
-    await update(child(dbRef, BUYERS_DB), buyers);
+    await update(dbRef, {[BUYERS_DB]: buyers});
   } catch (error) {
     console.error("Error adding user to buyers:", error);
   }
