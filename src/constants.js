@@ -9,6 +9,7 @@ return a response of a single word: "SELL".
 The following JSON contains all products:`;
 const USERS_DB = "users/";
 const PRODUCTS_DB = "products/";
+const BUYERS_DB = "buyers/"
 
 module.exports = {
   RESET_MESSAGE,
@@ -16,4 +17,5 @@ module.exports = {
   SYSTEM_MESSAGE,
   USERS_DB,
   PRODUCTS_DB,
+  BUYERS_DB
 };

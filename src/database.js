@@ -7,7 +7,7 @@ const {
   update,
 } = require("firebase/database");
 
-const { USERS_DB, PRODUCTS_DB } = require("./constants");
+const { USERS_DB, PRODUCTS_DB, BUYERS_DB } = require("./constants");
 
 function getUserId(userId) {
   const regex = /^[A-Za-z0-9]+$/;
@@ -66,4 +66,30 @@ async function getProducts(database) {
   }
 }
 
-module.exports = { resetUser, getMessages, addMessage, getProducts };
+async function getBuyers(database) {
+  dbRef = ref(database);
+  try {
+    const snapshot = await get(child(dbRef, BUYERS_DB));
+    if (snapshot.exists()) {
+      return snapshot.val() || [];
+    } else {
+      return [];
+    }
+  } catch (error) {
+    console.error("Error fetching buyers:", error);
+    return [];
+  }
+}
+
+async function addBuyer(database, userId) {
+  dbRef = ref(database);
+  try {
+    buyers = await getBuyers(database);
+    buyers.push(userId);
+    await update(child(dbRef, BUYERS_DB), buyers);
+  } catch (error) {
+    console.error("Error adding user to buyers:", error);
+  }
+}
+
+module.exports = { resetUser, getMessages, addMessage, getProducts, getBuyers, addBuyer };
