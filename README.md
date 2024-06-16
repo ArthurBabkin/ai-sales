@@ -8,8 +8,8 @@ Hamza Salem @enghamzasalem
 The dev bot can be accessed on WhatsApp: `+7 961 337-99-19`\
 Configuration to access Bot via Green API:
 ```
-ID_INSTANCE="1103944710"
-API_TOKEN_INSTANCE="b938a20fc0a74a5f8072eb0b69faa6d23db163be41eb496e9c"
+ID_INSTANCE="1103946695"
+API_TOKEN_INSTANCE="b406697e42b84bd8b412f4a56cb7e791b6fc574055e04955a8"
 ```
 
 The project uses [firebase](https://console.firebase.google.com/project/ai-sales-92cf4/overview) realtime database. Use the following firebase configuration for access:

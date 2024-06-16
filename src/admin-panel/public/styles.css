@@ -1,0 +1,51 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+h1 {
+    text-align: center;
+}
+
+.form {
+    border: 1px solid #ddd;
+    padding: 16px;
+    margin-bottom: 16px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+}
+
+.form label {
+    display: block;
+    margin-top: 8px;
+}
+
+.form input,
+.form textarea {
+    display: block;
+    width: 80%; 
+    padding: 8px;
+    margin-top: 4px;
+}
+
+.form textarea {
+    resize: vertical; /* Make textarea resizable only vertically */
+}
+
+.form input[type="submit"] {
+    width: auto;
+    margin-top: 16px;
+    padding: 8px 16px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.form input[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+.button {
+    margin-right: 10px;
+}

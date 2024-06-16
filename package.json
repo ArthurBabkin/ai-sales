@@ -1,11 +1,15 @@
 {
-  "name": "inno-whatsapp-interns",
+  "name": "ai-sales",
   "version": "1.0.0",
   "description": "- Create firebase project realtime [https://firebase.google.com/docs/web/setup](https://firebase.google.com/docs/web/setup). - Create an account here [https://green-api.com/](https://green-api.com/) use free account. - Ask Hamza Salem @enghamzasalem for URL for LLM usage or use Google gemini [https://makersuite.google.com/](https://makersuite.google.com/). - Setup node js project and setup dependencies",
   "main": "main.js",
   "scripts": {
-    "start": "node --env-file=.env src/main.js",
-    "start-container": "node src/main.js"
+    "start-bot": "node --env-file=.env src/bot/main.js",
+    "start-bot-container": "node src/bot/main.js",
+    "start-bot-test": "node --env-file=.testenv src/bot/main.js",
+    "start-admin-panel": "node --env-file=.env src/admin-panel/server.js",
+    "start-admin-panel-container": "node src/admin-panel/server.js",
+    "start": "pm2 start src/ecosystem.config.js && pm2 logs"
   },
   "keywords": [],
   "author": "",
@@ -13,7 +17,14 @@
   "dependencies": {
     "@green-api/whatsapp-bot": "^0.1.3",
     "axios": "^1.7.2",
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.2",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
     "firebase": "^10.12.2",
+    "pm2": "^5.4.0",
     "request": "^2.88.2"
   }
 }

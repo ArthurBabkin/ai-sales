@@ -1,14 +1,20 @@
 const WhatsAppBot = require("@green-api/whatsapp-bot");
 const { initializeApp } = require("firebase/app");
 const { getDatabase } = require("firebase/database");
-const { get_llm_response } = require("./api");
-const { HELP_MESSAGE, RESET_MESSAGE, SYSTEM_MESSAGE } = require("./constants");
+const { getLLMResponse, getUserIntent } = require("./api");
+const {
+  HELP_MESSAGE,
+  RESET_MESSAGE,
+  SYSTEM_MESSAGE,
+  CLASSIFIER_MESSAGE,
+} = require("./constants");
 const {
   resetUser,
   getMessages,
   addMessage,
   getProducts,
-  addBuyer,
+  addTrigger,
+  getIntents
 } = require("./database");
 
 const firebaseConfig = {
@@ -40,6 +46,22 @@ function squeezeMessages(
   return messages;
 }
 
+function stringToJson(inputString) {
+  const jsonRegex = /{[^{}]*}/;
+  const match = inputString.match(jsonRegex);
+  if (match) {
+    try {
+      return JSON.parse(match[0]);
+    } catch (error) {
+      console.error("Error parsing JSON:", error);
+      return null;
+    }
+  } else {
+    console.error("No JSON found in the input string");
+    return null;
+  }
+}
+
 const bot = new WhatsAppBot({
   idInstance: process.env.ID_INSTANCE,
   apiTokenInstance: process.env.API_TOKEN_INSTANCE,
@@ -69,27 +91,48 @@ bot.on("message", async (ctx) => {
     role: "user",
     content: ctx.update.message.text,
   });
-  const messages = await getMessages(database, userId);
+  messages = await getMessages(database, userId);
+  messages = squeezeMessages(messages);
   try {
     const products = await getProducts(database);
-    const response = await get_llm_response(
-      squeezeMessages(messages),
+    const intents = await getIntents(database);
+    try {
+      const intentResponse = await getUserIntent(
+        products,
+        messages,
+        intents,
+        CLASSIFIER_MESSAGE,
+        process.env.LLM_URL,
+        process.env.DEEPSEEK_TOKEN,
+        process.env.LLM_NAME
+      );
+      const intent = stringToJson(intentResponse);
+      if (intent["intent"] != "NONE") {
+        continueDialogue = false;
+        await addTrigger(database, userId, intent["intent"]);
+        await ctx.reply("TRIGGER ACTIVATED");
+        return;
+      }
+    } catch (error) {
+      console.error(
+        "Error while parsing user intent: " +
+          error +
+          "\n Proceeding with dialogue..."
+      );
+    }
+    const messageResponse = await getLLMResponse(
+      messages,
       process.env.LLM_URL,
       process.env.DEEPSEEK_TOKEN,
       "deepseek-chat",
       SYSTEM_MESSAGE + "\n" + JSON.stringify(products)
     );
 
-    message = response;
+    message = messageResponse;
     await addMessage(database, userId, {
       role: "assistant",
       content: message,
     });
-
-    if (message === "SELL") {
-      message = "Trigger activated";
-      await addBuyer(database, userId);
-    }
 
     await ctx.reply(message);
   } catch (error) {
