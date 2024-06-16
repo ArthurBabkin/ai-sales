@@ -1,17 +1,14 @@
-### Building and running your application
-
-To build an docker image of an application, from working directory run:
-`docker build -t ai-sales.`.
-
-App will be running on http://localhost:8000.
-
-### Running application
-
-Once image is build, run it:
-`docker run --name ai-sales-container ai-sales`
-
-Consult Docker's [getting started](https://docs.docker.com/go/get-started-sharing/)
-docs for more detail on building and pushing.
-
-### References
-* [Docker's Node.js guide](https://docs.docker.com/language/nodejs/)
+# Installation
+Install [docker desktop](https://www.docker.com/products/docker-desktop/) from official website
+# Building Image
+To build docker image, go to project directory and run:
+```
+docker build -t ai-sales .
+```
+this will build an image from `Dockerfile`. You will be able to see this image in your docker desktop app in `images` section
+# Running
+To start the webapp, run:
+```
+docker run -p 8000:8000 --name ai-sales ai-sales
+```
+in project directory. You will see the running container in docker desktop in `containers` section

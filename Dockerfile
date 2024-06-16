@@ -13,8 +13,11 @@ FROM node:${NODE_VERSION}-alpine
 # Use production node environment by default.
 ENV NODE_ENV production
 
+# Run the application as a non-root user.
+USER node
 
-WORKDIR /app
+# Set working directory
+WORKDIR /home/node/app
 
 # Download dependencies as a separate step to take advantage of Docker's caching.
 # Leverage a cache mount to /root/.npm to speed up subsequent builds.
@@ -25,15 +28,9 @@ RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=cache,target=/root/.npm \
     npm ci --omit=dev
 
-# Run the application as a non-root user.
-USER node
-
-# Copy the rest of the source files into the image.
-COPY . .
-
 # Set environmental variables
-ENV ID_INSTANCE="1103944710"
-ENV API_TOKEN_INSTANCE="b938a20fc0a74a5f8072eb0b69faa6d23db163be41eb496e9c"
+ENV ID_INSTANCE="1103946695"
+ENV API_TOKEN_INSTANCE="b406697e42b84bd8b412f4a56cb7e791b6fc574055e04955a8"
 ENV API_KEY="AIzaSyA3F_W3kRoR3IRKIHMuo02Dr_o_76YzUtE"
 ENV AUTH_DOMAIN="ai-sales-92cf4.firebaseapp.com"
 ENV PROJECT_ID="ai-sales-92cf4"
@@ -46,9 +43,13 @@ ENV TELEGRAM_TOKEN="7415920476:AAHY9ligor15DUGL2rKv1240wn_-8k7Ctvs"
 ENV DEEPSEEK_TOKEN="sk-0441f3e4c485454dbd7c60d38c8bf34e"
 ENV LLM_NAME="deepseek-chat"
 ENV LLM_URL="https://api.deepseek.com/chat/completions"
+ENV PORT=8000
+
+# Copy the rest of the source files into the image.
+COPY . .
 
 # Expose the port that the application listens on.
 EXPOSE 8000
 
 # Run the application.
-CMD npm run start-container
+CMD ["npm", "run", "start"]

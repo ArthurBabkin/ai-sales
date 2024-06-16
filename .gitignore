@@ -1,4 +1,7 @@
 node_modules/
 .vscode/
-package-lock.json
 .env
+.testenv
+logs/
+.venv/
+admin_panel/src/add_admins.js
