@@ -1,4 +1,5 @@
 require("dotenv").config();
+require("dotenv").config();
 const WhatsAppBot = require("@green-api/whatsapp-bot");
 const { initializeApp } = require("firebase/app");
 const { getDatabase } = require("firebase/database");

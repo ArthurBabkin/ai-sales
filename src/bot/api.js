@@ -1,4 +1,3 @@
-const request = require("request");
 const axios = require("axios");
 const { HttpsProxyAgent } = require("https-proxy-agent");
 
