@@ -1,3 +1,4 @@
+require("dotenv").config();
 const WhatsAppBot = require("@green-api/whatsapp-bot");
 const { initializeApp } = require("firebase/app");
 const { getDatabase } = require("firebase/database");
@@ -6,6 +7,7 @@ const {
   HELP_MESSAGE,
   RESET_MESSAGE,
   SYSTEM_MESSAGE,
+  CLASSIFIER_SYSTEM_MESSAGE,
   CLASSIFIER_MESSAGE,
 } = require("./constants");
 const {
@@ -14,7 +16,7 @@ const {
   addMessage,
   getProducts,
   addTrigger,
-  getIntents
+  getIntents,
 } = require("./database");
 
 const firebaseConfig = {
@@ -61,10 +63,12 @@ function stringToJson(inputString) {
     return null;
   }
 }
-
+console.log(process.env.API_TOKEN_INSTANCE);
 const bot = new WhatsAppBot({
-  idInstance: process.env.ID_INSTANCE,
-  apiTokenInstance: process.env.API_TOKEN_INSTANCE,
+  // idInstance: process.env.ID_INSTANCE,
+  // apiTokenInstance: process.env.API_TOKEN_INSTANCE,
+  idInstance: "1103946695",
+  apiTokenInstance: "b406697e42b84bd8b412f4a56cb7e791b6fc574055e04955a8",
 });
 
 bot.command("reset", async (ctx) => {
@@ -98,21 +102,24 @@ bot.on("message", async (ctx) => {
     const intents = await getIntents(database);
     try {
       const intentResponse = await getUserIntent(
-        products,
         messages,
         intents,
         CLASSIFIER_MESSAGE,
         process.env.LLM_URL,
         process.env.DEEPSEEK_TOKEN,
-        process.env.LLM_NAME
+        process.env.LLM_NAME,
+        CLASSIFIER_SYSTEM_MESSAGE
       );
-      const intent = stringToJson(intentResponse);
-      if (intent["intent"] != "NONE") {
-        continueDialogue = false;
-        await addTrigger(database, userId, intent["intent"]);
-        await ctx.reply("TRIGGER ACTIVATED");
-        return;
-      }
+      // const intent = stringToJson(intentResponse);
+      // if (intent["intent"] != "NONE") {
+      //   continueDialogue = false;
+      //   await addTrigger(database, userId, intent["intent"]);
+      //   await ctx.reply("TRIGGER ACTIVATED");
+      //   return;
+      // }
+      console.log("============");
+      console.log(intentResponse);
+      console.log("============");
     } catch (error) {
       console.error(
         "Error while parsing user intent: " +

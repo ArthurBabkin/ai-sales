@@ -30,28 +30,29 @@ function getLLMResponse(messages, url, token, modelName, systemMessage = null) {
 }
 
 async function getUserIntent(
-  products,
   messages,
   intents,
   prompt,
   url,
   token,
-  modelName
+  modelName,
+  systemMessage = null
 ) {
   prompt =
     prompt +
-    "\nIntents:\n" +
-    JSON.stringify(intents) + 
+    // "\nIntents:\n" +
+    // JSON.stringify(intents) +
     "\nDialogue:\n" +
-    JSON.stringify(messages) +
-    "\nList of products:\n" +
-    JSON.stringify(products);
-  result = await getLLMResponse(
-    [{ role: "user", content: prompt }],
-    url,
-    token,
-    modelName
-  );
+    JSON.stringify(messages);
+  if (systemMessage != null) {
+    history = [
+      { role: "system", content: systemMessage },
+      { role: "user", content: prompt },
+    ];
+  } else {
+    history = [{ role: "user", content: prompt }];
+  }
+  result = await getLLMResponse(history, url, token, modelName);
   return result;
 }
 module.exports = { getLLMResponse, getUserIntent };

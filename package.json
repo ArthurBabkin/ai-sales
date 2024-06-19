@@ -5,10 +5,8 @@
   "main": "main.js",
   "scripts": {
     "start-bot": "node --env-file=.env src/bot/main.js",
-    "start-bot-container": "node src/bot/main.js",
     "start-bot-test": "node --env-file=.testenv src/bot/main.js",
     "start-admin-panel": "node --env-file=.env src/admin-panel/server.js",
-    "start-admin-panel-container": "node src/admin-panel/server.js",
     "start": "pm2 start src/ecosystem.config.js && pm2 logs"
   },
   "keywords": [],

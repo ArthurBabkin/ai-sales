@@ -1,5 +1,6 @@
+require("dotevn").config();
 const express = require("express");
-const bodyParser = require("body-parser"); // Include body-parser
+const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const path = require("path");
 const { initializeApp } = require("firebase/app");
