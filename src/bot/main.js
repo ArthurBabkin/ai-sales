@@ -102,7 +102,7 @@ bot.on("message", async (ctx) => {
     const products = await getProducts(database);
     const intents = await getIntents(database);
     try {
-      const intentResponse = await getUserIntent(
+      const intent = await getUserIntent(
         messages,
         intents,
         CLASSIFIER_MESSAGE,
@@ -110,12 +110,9 @@ bot.on("message", async (ctx) => {
         process.env.GEMINI_TOKEN,
         process.env.PROXY_URL
       );
-      console.log(intentResponse);
-      process.exit();
-      const intent = stringToJson(intentResponse);
-      if (intent["intent"] != "NONE") {
+      if (intent.includes("YES")) {
         continueDialogue = false;
-        await addTrigger(database, userId, intent["intent"]);
+        await addTrigger(database, userId);
         await ctx.reply("TRIGGER ACTIVATED");
         return;
       }

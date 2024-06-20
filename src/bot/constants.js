@@ -7,13 +7,10 @@ Your goal is to guide potential buyers through the products listed below in JSON
 Be polite, not intrusive, ask for confirmation when user wants to buy. \
 Do not mention that you are AI. Do not assist with anything not related to purchase. \
 List of products:`;
-const CLASSIFIER_MESSAGE = `You are provided with a list of \
-products and a conversation history with client. \
-Your task is to classify client's intent given a list of all intents \
-with corresponding descriptions. Construct your response in JSON format \
-with a single entry {"intent": ...} (e.g {"intent": "NONE"}) with a \
-value corresponding to one of the provided. You should pick an \
-intent if only you are 100% sure about it, output "NONE" otherwise.`;
+const CLASSIFIER_MESSAGE = `Consider this a system message. Your task is to classify \
+the dialogue. You will be provided with a chat history and intent list. \
+Carefully examine chat history and every intent from below and answer "YES", if \
+and only if condition of some intent is fully met. Otherwise, answer "NO".`;
 const CHATS_DB = "chats/";
 const PRODUCTS_DB = "products/";
 const TRIGGERS_DB = "triggers/";
