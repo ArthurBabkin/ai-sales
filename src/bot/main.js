@@ -108,8 +108,7 @@ bot.on("message", async (ctx) => {
         process.env.GEMINI_TOKEN,
         process.env.PROXY_URL
       );
-      const intent = stringToJson(intentResponse);
-      if (intent["intent"] != "NONE") {
+      if (intent.includes("YES")) {
         continueDialogue = false;
         await addTrigger(database, userId);
         await ctx.reply("TRIGGER ACTIVATED");
