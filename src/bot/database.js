@@ -81,11 +81,11 @@ async function getTriggers(database) {
   }
 }
 
-async function addTrigger(database, userId, intent) {
+async function addTrigger(database, userId) {
   dbRef = ref(database);
   try {
     buyers = await getTriggers(database);
-    buyers.push({ userId: userId, intent: intent });
+    buyers.push({ userId: userId});
     await update(dbRef, { [TRIGGERS_DB]: buyers });
   } catch (error) {
     console.error("Error adding trigger:", error);

@@ -2,6 +2,7 @@ node_modules/
 .vscode/
 .env
 .testenv
+.envrc
 logs/
 .venv/
 admin_panel/src/add_admins.js
