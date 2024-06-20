@@ -1,7 +1,8 @@
+require("dotenv").config();
 const WhatsAppBot = require("@green-api/whatsapp-bot");
 const { initializeApp } = require("firebase/app");
 const { getDatabase } = require("firebase/database");
-const { getLLMResponse, getUserIntent } = require("./api");
+const { getGeminiResponse, getUserIntent } = require("./api");
 const {
   HELP_MESSAGE,
   RESET_MESSAGE,
@@ -15,6 +16,7 @@ const {
   addMessage,
   getProducts,
   addTrigger,
+  getIntents,
   getIntents,
 } = require("./database");
 
@@ -104,21 +106,19 @@ bot.on("message", async (ctx) => {
         messages,
         intents,
         CLASSIFIER_MESSAGE,
-        process.env.LLM_URL,
-        process.env.DEEPSEEK_TOKEN,
-        process.env.LLM_NAME,
-        CLASSIFIER_SYSTEM_MESSAGE
+        process.env.GEMINI_MODEL,
+        process.env.GEMINI_TOKEN,
+        process.env.PROXY_URL
       );
-      // const intent = stringToJson(intentResponse);
-      // if (intent["intent"] != "NONE") {
-      //   continueDialogue = false;
-      //   await addTrigger(database, userId, intent["intent"]);
-      //   await ctx.reply("TRIGGER ACTIVATED");
-      //   return;
-      // }
-      console.log("============");
       console.log(intentResponse);
-      console.log("============");
+      process.exit();
+      const intent = stringToJson(intentResponse);
+      if (intent["intent"] != "NONE") {
+        continueDialogue = false;
+        await addTrigger(database, userId, intent["intent"]);
+        await ctx.reply("TRIGGER ACTIVATED");
+        return;
+      }
     } catch (error) {
       console.error(
         "Error while parsing user intent: " +
@@ -126,11 +126,11 @@ bot.on("message", async (ctx) => {
           "\n Proceeding with dialogue..."
       );
     }
-    const messageResponse = await getLLMResponse(
+    const messageResponse = await getGeminiResponse(
       messages,
-      process.env.LLM_URL,
-      process.env.DEEPSEEK_TOKEN,
-      "deepseek-chat",
+      process.env.GEMINI_MODEL,
+      process.env.GEMINI_TOKEN,
+      process.env.PROXY_URL,
       SYSTEM_MESSAGE + "\n" + JSON.stringify(products)
     );
 
