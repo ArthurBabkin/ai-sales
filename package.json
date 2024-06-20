@@ -4,9 +4,8 @@
   "description": "- Create firebase project realtime [https://firebase.google.com/docs/web/setup](https://firebase.google.com/docs/web/setup). - Create an account here [https://green-api.com/](https://green-api.com/) use free account. - Ask Hamza Salem @enghamzasalem for URL for LLM usage or use Google gemini [https://makersuite.google.com/](https://makersuite.google.com/). - Setup node js project and setup dependencies",
   "main": "main.js",
   "scripts": {
-    "start-bot": "node --env-file=.env src/bot/main.js",
-    "start-bot-test": "node --env-file=.testenv src/bot/main.js",
-    "start-admin-panel": "node --env-file=.env src/admin-panel/server.js",
+    "start-bot": "node src/bot/main.js",
+    "start-admin-panel": "node src/admin-panel/server.js",
     "start": "pm2 start src/ecosystem.config.js && pm2 logs"
   },
   "keywords": [],
@@ -22,6 +21,8 @@
     "express": "^4.19.2",
     "express-session": "^1.18.0",
     "firebase": "^10.12.2",
+    "https-proxy-agent": "^7.0.4",
+    "node-fetch": "^3.3.2",
     "pm2": "^5.4.0",
     "request": "^2.88.2"
   }
