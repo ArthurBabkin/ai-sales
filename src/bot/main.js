@@ -3,12 +3,10 @@ const WhatsAppBot = require("@green-api/whatsapp-bot");
 const { initializeApp } = require("firebase/app");
 const { getDatabase } = require("firebase/database");
 const { getGeminiResponse, getUserIntent } = require("./api");
-const { getGeminiResponse, getUserIntent } = require("./api");
 const {
   HELP_MESSAGE,
   RESET_MESSAGE,
   SYSTEM_MESSAGE,
-  CLASSIFIER_SYSTEM_MESSAGE,
   CLASSIFIER_MESSAGE,
 } = require("./constants");
 const {
@@ -17,7 +15,6 @@ const {
   addMessage,
   getProducts,
   addTrigger,
-  getIntents,
   getIntents,
 } = require("./database");
 
@@ -65,7 +62,7 @@ function stringToJson(inputString) {
     return null;
   }
 }
-console.log(process.env.API_TOKEN_INSTANCE);
+
 const bot = new WhatsAppBot({
   idInstance: process.env.ID_INSTANCE,
   apiTokenInstance: process.env.API_TOKEN_INSTANCE,
