@@ -1,7 +1,8 @@
+require("dotenv").config();
 const WhatsAppBot = require("@green-api/whatsapp-bot");
 const { initializeApp } = require("firebase/app");
 const { getDatabase } = require("firebase/database");
-const { getLLMResponse, getUserIntent } = require("./api");
+const { getGeminiResponse, getUserIntent } = require("./api");
 const {
   HELP_MESSAGE,
   RESET_MESSAGE,
@@ -14,7 +15,7 @@ const {
   addMessage,
   getProducts,
   addTrigger,
-  getIntents
+  getIntents,
 } = require("./database");
 
 const firebaseConfig = {
@@ -102,10 +103,12 @@ bot.on("message", async (ctx) => {
         messages,
         intents,
         CLASSIFIER_MESSAGE,
-        process.env.LLM_URL,
-        process.env.DEEPSEEK_TOKEN,
-        process.env.LLM_NAME
+        process.env.GEMINI_MODEL,
+        process.env.GEMINI_TOKEN,
+        process.env.PROXY_URL
       );
+      console.log(intentResponse);
+      process.exit();
       const intent = stringToJson(intentResponse);
       if (intent["intent"] != "NONE") {
         continueDialogue = false;
@@ -120,11 +123,11 @@ bot.on("message", async (ctx) => {
           "\n Proceeding with dialogue..."
       );
     }
-    const messageResponse = await getLLMResponse(
+    const messageResponse = await getGeminiResponse(
       messages,
-      process.env.LLM_URL,
-      process.env.DEEPSEEK_TOKEN,
-      "deepseek-chat",
+      process.env.GEMINI_MODEL,
+      process.env.GEMINI_TOKEN,
+      process.env.PROXY_URL,
       SYSTEM_MESSAGE + "\n" + JSON.stringify(products)
     );
 

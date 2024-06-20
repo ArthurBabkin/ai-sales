@@ -1,32 +1,47 @@
 const request = require("request");
+const axios = require("axios");
+const { HttpsProxyAgent } = require("https-proxy-agent");
 
-function getLLMResponse(messages, url, token, modelName, systemMessage = null) {
+async function getGeminiResponse(
+  messages,
+  modelName,
+  token,
+  proxy,
+  systemMessage = null
+) {
   if (systemMessage != null) {
-    messages = [{ role: "system", content: systemMessage }].concat(messages);
+    messages = [{ role: "user", content: systemMessage }].concat(messages);
   }
-  const options = {
-    url: url,
-    method: "POST",
-    json: true,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + token,
-    },
-    body: {
-      model: modelName,
-      messages: messages,
-    },
+  geminiMessages = [];
+  map = {
+    user: "user",
+    assistant: "model",
   };
-
-  return new Promise((resolve, reject) => {
-    request(options, function (error, response, body) {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(body.choices[0].message.content);
-      }
+  for (i = 0; i < messages.length; i++) {
+    geminiMessages.push({
+      role: map[messages[i]["role"]],
+      parts: [{ text: messages[i]["content"] }],
     });
-  });
+  }
+  const url = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${token}`;
+  const agent = new HttpsProxyAgent(proxy);
+  try {
+    const response = await axios({
+      method: "post",
+      url: url,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      data: {
+        contents: geminiMessages,
+      },
+      httpsAgent: agent,
+    });
+    return response.data.candidates[0].content.parts[0].text;
+  } catch (error) {
+    console.error(error);
+    return 1;
+  }
 }
 
 async function getUserIntent(
@@ -34,24 +49,25 @@ async function getUserIntent(
   messages,
   intents,
   prompt,
-  url,
+  modelName,
   token,
-  modelName
+  proxy
 ) {
   prompt =
     prompt +
     "\nIntents:\n" +
-    JSON.stringify(intents) + 
+    JSON.stringify(intents) +
     "\nDialogue:\n" +
     JSON.stringify(messages) +
     "\nList of products:\n" +
     JSON.stringify(products);
-  result = await getLLMResponse(
+  result = await getGeminiResponse(
     [{ role: "user", content: prompt }],
-    url,
+    modelName,
     token,
-    modelName
+    proxy
   );
   return result;
 }
-module.exports = { getLLMResponse, getUserIntent };
+
+module.exports = { getGeminiResponse, getUserIntent };
