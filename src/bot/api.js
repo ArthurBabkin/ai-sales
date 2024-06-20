@@ -39,13 +39,12 @@ async function getGeminiResponse(
     });
     return response.data.candidates[0].content.parts[0].text;
   } catch (error) {
-    console.error(error);
+    console.error("Error getting response:", error);
     return 1;
   }
 }
 
 async function getUserIntent(
-  products,
   messages,
   intents,
   prompt,
@@ -58,9 +57,7 @@ async function getUserIntent(
     "\nIntents:\n" +
     JSON.stringify(intents) +
     "\nDialogue:\n" +
-    JSON.stringify(messages) +
-    "\nList of products:\n" +
-    JSON.stringify(products);
+    JSON.stringify(messages)
   result = await getGeminiResponse(
     [{ role: "user", content: prompt }],
     modelName,
