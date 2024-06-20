@@ -1,6 +1,8 @@
+require("dotenv").config();
 const WhatsAppBot = require("@green-api/whatsapp-bot");
 const { initializeApp } = require("firebase/app");
 const { getDatabase } = require("firebase/database");
+const { getGeminiResponse, getUserIntent } = require("./api");
 const { getGeminiResponse, getUserIntent } = require("./api");
 const {
   HELP_MESSAGE,
@@ -15,7 +17,6 @@ const {
   addMessage,
   getProducts,
   addTrigger,
-  getIntents,
   getIntents,
 } = require("./database");
 
@@ -65,10 +66,8 @@ function stringToJson(inputString) {
 }
 console.log(process.env.API_TOKEN_INSTANCE);
 const bot = new WhatsAppBot({
-  // idInstance: process.env.ID_INSTANCE,
-  // apiTokenInstance: process.env.API_TOKEN_INSTANCE,
-  idInstance: "1103946695",
-  apiTokenInstance: "b406697e42b84bd8b412f4a56cb7e791b6fc574055e04955a8",
+  idInstance: process.env.ID_INSTANCE,
+  apiTokenInstance: process.env.API_TOKEN_INSTANCE,
 });
 
 bot.command("reset", async (ctx) => {
@@ -109,7 +108,8 @@ bot.on("message", async (ctx) => {
         process.env.GEMINI_TOKEN,
         process.env.PROXY_URL
       );
-      if (intent.includes("YES")) {
+      const intent = stringToJson(intentResponse);
+      if (intent["intent"] != "NONE") {
         continueDialogue = false;
         await addTrigger(database, userId);
         await ctx.reply("TRIGGER ACTIVATED");
