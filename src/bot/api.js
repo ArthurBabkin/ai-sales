@@ -1,4 +1,3 @@
-const request = require("request");
 const axios = require("axios");
 const { HttpsProxyAgent } = require("https-proxy-agent");
 
@@ -57,7 +56,7 @@ async function getUserIntent(
     "\nIntents:\n" +
     JSON.stringify(intents) +
     "\nDialogue:\n" +
-    JSON.stringify(messages)
+    JSON.stringify(messages);
   result = await getGeminiResponse(
     [{ role: "user", content: prompt }],
     modelName,

@@ -96,30 +96,7 @@ bot.on("message", async (ctx) => {
   messages = squeezeMessages(messages);
   try {
     const products = await getProducts(database);
-    const intents = await getIntents(database);
-    try {
-      const intent = await getUserIntent(
-        messages,
-        intents,
-        CLASSIFIER_MESSAGE,
-        process.env.GEMINI_MODEL,
-        process.env.GEMINI_TOKEN,
-        process.env.PROXY_URL
-      );
-      if (intent.includes("YES")) {
-        continueDialogue = false;
-        await addTrigger(database, userId);
-        await ctx.reply("TRIGGER ACTIVATED");
-        return;
-      }
-    } catch (error) {
-      console.error(
-        "Error while parsing user intent: " +
-          error +
-          "\n Proceeding with dialogue..."
-      );
-    }
-    const messageResponse = await getGeminiResponse(
+    const message = await getGeminiResponse(
       messages,
       process.env.GEMINI_MODEL,
       process.env.GEMINI_TOKEN,
@@ -127,7 +104,12 @@ bot.on("message", async (ctx) => {
       SYSTEM_MESSAGE + "\n" + JSON.stringify(products)
     );
 
-    message = messageResponse;
+    if (message.includes("Thank you for purchase")) {
+      await addTrigger(database, userId);
+      await ctx.reply("TRIGGER ACTIVATED");
+      return;
+    }
+    
     await addMessage(database, userId, {
       role: "assistant",
       content: message,
@@ -135,7 +117,7 @@ bot.on("message", async (ctx) => {
 
     await ctx.reply(message);
   } catch (error) {
-    console.error(error);
+    console.error("Error getting response:", error);
 
     await addMessage(database, userId, {
       role: "assistant",
