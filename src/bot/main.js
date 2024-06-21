@@ -104,7 +104,7 @@ bot.on("message", async (ctx) => {
       SYSTEM_MESSAGE + "\n" + JSON.stringify(products)
     );
 
-    if (message.includes("Thank you for purchase")) {
+    if (message.toLowerCase().includes("thank") && message.toLowerCase().includes("purchase")) {
       await addTrigger(database, userId);
       await ctx.reply("TRIGGER ACTIVATED");
       return;
