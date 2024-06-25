@@ -9,6 +9,7 @@ const {
   addProduct,
   updateProduct,
   deleteProduct,
+  addIntent,
   updateIntent,
   deleteIntent,
   checkAdmin,
@@ -75,7 +76,7 @@ app.get("/intents", async (req, res) => {
   } else {
     res.redirect("/auth");
   }
-})
+});
 
 app.get("/auth", async (req, res) => {
   const auth = await checkReqAuth(req, database);
@@ -85,7 +86,6 @@ app.get("/auth", async (req, res) => {
     res.redirect("/");
   }
 });
-
 
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
@@ -171,12 +171,33 @@ app.get("/list-products", async (req, res) => {
   }
 });
 
-app.post("/update-intent", async (req, res) => {
-  const { name, description } = req.body;
+app.post("/submit-intent", async (req, res) => {
+  const { intentName, intentDescription } = req.body;
   const auth = await checkReqAuth(req, database);
   if (auth) {
     await extendSession(req.cookies.username, req.cookies.sessionId, database);
-    const code = await updateIntent(name, description, database);
+    const code = await addIntent(intentName, intentDescription, database);
+    if (code === 0) {
+      res.json({ success: true });
+    } else {
+      res.json({ success: false });
+    }
+  } else {
+    res.json({ success: false });
+  }
+});
+
+app.post("/update-intent", async (req, res) => {
+  const { intentName, intentDescription, intentId } = req.body;
+  const auth = await checkReqAuth(req, database);
+  if (auth) {
+    await extendSession(req.cookies.username, req.cookies.sessionId, database);
+    const code = await updateIntent(
+      intentName,
+      intentDescription,
+      parseInt(intentId),
+      database
+    );
     if (code === 0) {
       res.json({ success: true });
     } else {
@@ -188,11 +209,11 @@ app.post("/update-intent", async (req, res) => {
 });
 
 app.post("/delete-intent", async (req, res) => {
-  const { name } = req.body;
+  const { intentId } = req.body;
   const auth = await checkReqAuth(req, database);
   if (auth) {
     await extendSession(req.cookies.username, req.cookies.sessionId, database);
-    const code = await deleteIntent(name, database);
+    const code = await deleteIntent(parseInt(intentId), database);
     if (code === 0) {
       res.json({ success: true });
     } else {
