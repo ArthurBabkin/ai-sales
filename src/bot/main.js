@@ -16,6 +16,7 @@ const {
   getProducts,
   addTrigger,
   getIntents,
+  getSystemPrompt,
 } = require("./database");
 
 const firebaseConfig = {
@@ -113,6 +114,7 @@ bot.on("message", async (ctx) => {
   messages = await getMessages(database, userId);
   messages = squeezeMessages(messages);
   try {
+    const systemPrompt = await getSystemPrompt(database);
     const products = await getProducts(database);
     const intents = await getIntents(database);
     const intent = await getUserIntent(
@@ -129,7 +131,7 @@ bot.on("message", async (ctx) => {
       process.env.GEMINI_MODEL,
       process.env.GEMINI_TOKEN,
       process.env.PROXY_URL,
-      SYSTEM_MESSAGE + "\nProducts:\n" + JSON.stringify(products)
+      systemPrompt + "\nProducts:\n" + JSON.stringify(products)
     );
 
     const trigger = checkTrigger(message, intent, intents);
