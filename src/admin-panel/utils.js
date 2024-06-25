@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
-const { ref, update, get, child, remove } = require("firebase/database");
+const { ref, update, get, child } = require("firebase/database");
 const { ADMINS_DB, SESSIONS_DB, SESSION_TIMEOUT } = require("./constants");
-const { getProducts } = require("../bot/database");
+const { getProducts, getIntents } = require("../bot/database");
 const { PRODUCTS_DB, INTENTS_DB } = require("../bot/constants");
 
 async function addProduct(name, description, price, database) {
@@ -72,22 +72,63 @@ async function deleteProduct(id, database) {
   }
 }
 
-async function updateIntent(name, description, database) {
+async function addIntent(name, description, database) {
   dbRef = ref(database);
   try {
-    await update(child(dbRef, INTENTS_DB), { [name]: description });
+    const snapshot = await get(child(dbRef, INTENTS_DB));
+    const intents = snapshot.val() || [];
+    code = 1;
+    intents.push({ name: name, description: description });
+    for (i = 0; i < intents.length; i++) {
+      intents[i]["id"] = i;
+    }
+    await update(dbRef, { [INTENTS_DB]: intents });
     return 0;
   } catch (error) {
-    console.error("Error updating intents:", error);
+    console.error("Error adding intent:", error);
     return 1;
   }
 }
 
-async function deleteIntent(name, database) {
+async function updateIntent(name, description, id, database) {
   dbRef = ref(database);
   try {
-    await remove(child(dbRef, INTENTS_DB + "/" + name));
-    return 0;
+    code = 1;
+    intents = await getIntents(database);
+    intents.sort((a, b) => a["id"] - b["id"]);
+    for (i = 0; i < intents.length; i++) {
+      if (intents[i]["id"] === id) {
+        intents[i]["name"] = name;
+        intents[i]["description"] = description;
+        code = 0;
+      }
+      intents[i]["id"] = i;
+    }
+    await update(dbRef, { [INTENTS_DB]: intents });
+    return code;
+  } catch (error) {
+    console.error("Error updating intent:", error);
+    return 1;
+  }
+}
+
+async function deleteIntent(id, database) {
+  dbRef = ref(database);
+  try {
+    code = 1;
+    intents = await getIntents(database);
+    intents.sort((a, b) => a["id"] - b["id"]);
+    newIntents = [];
+    for (i = 0; i < intents.length; i++) {
+      if (intents[i]["id"] === id) {
+        code = 0;
+        continue;
+      }
+      intents[i]["id"] = i;
+      newIntents.push(intents[i]);
+    }
+    await update(dbRef, { [INTENTS_DB]: newIntents });
+    return code;
   } catch (error) {
     console.error("Error deleting intent:", error);
     return 1;
@@ -216,6 +257,7 @@ module.exports = {
   addProduct,
   updateProduct,
   deleteProduct,
+  addIntent,
   updateIntent,
   deleteIntent,
   checkAdmin,

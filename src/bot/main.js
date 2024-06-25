@@ -47,6 +47,24 @@ function squeezeMessages(
   return messages;
 }
 
+function checkTrigger(messageResponse, intentResponse, intents) {
+  if (
+    messageResponse.toLowerCase().includes("thank") &&
+    messageResponse.toLowerCase().includes("purchase")
+  ) {
+    return "purchase";
+  }
+
+  foundIntent = null;
+  intents.forEach((intent) => {
+    if (intentResponse.toLowerCase().includes(intent["name"].toLowerCase())) {
+      foundIntent = intent["name"];
+    }
+  });
+
+  return foundIntent;
+}
+
 function stringToJson(inputString) {
   const jsonRegex = /{[^{}]*}/;
   const match = inputString.match(jsonRegex);
@@ -96,20 +114,31 @@ bot.on("message", async (ctx) => {
   messages = squeezeMessages(messages);
   try {
     const products = await getProducts(database);
+    const intents = await getIntents(database);
+    const intent = await getUserIntent(
+      messages,
+      intents,
+      CLASSIFIER_MESSAGE,
+      process.env.GEMINI_MODEL,
+      process.env.GEMINI_TOKEN,
+      process.env.PROXY_URL
+    );
+
     const message = await getGeminiResponse(
       messages,
       process.env.GEMINI_MODEL,
       process.env.GEMINI_TOKEN,
       process.env.PROXY_URL,
-      SYSTEM_MESSAGE + "\n" + JSON.stringify(products)
+      SYSTEM_MESSAGE + "\nProducts:\n" + JSON.stringify(products)
     );
 
-    if (message.toLowerCase().includes("thank") && message.toLowerCase().includes("purchase")) {
-      await addTrigger(database, userId);
+    const trigger = checkTrigger(message, intent, intents);
+    if (trigger != null) {
+      await addTrigger(database, userId, trigger);
       await ctx.reply("TRIGGER ACTIVATED");
       return;
     }
-    
+
     await addMessage(database, userId, {
       role: "assistant",
       content: message,

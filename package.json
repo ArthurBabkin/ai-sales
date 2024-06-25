@@ -22,8 +22,6 @@
     "express-session": "^1.18.0",
     "firebase": "^10.12.2",
     "https-proxy-agent": "^7.0.4",
-    "node-fetch": "^3.3.2",
-    "pm2": "^5.4.0",
-    "request": "^2.88.2"
+    "pm2": "^5.4.0"
   }
 }

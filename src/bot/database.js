@@ -1,5 +1,10 @@
 const { ref, get, set, child, update } = require("firebase/database");
-const { CHATS_DB, PRODUCTS_DB, TRIGGERS_DB, INTENTS_DB } = require("./constants");
+const {
+  CHATS_DB,
+  PRODUCTS_DB,
+  TRIGGERS_DB,
+  INTENTS_DB,
+} = require("./constants");
 
 function getUserId(userId) {
   const regex = /^[A-Za-z0-9]+$/;
@@ -81,11 +86,11 @@ async function getTriggers(database) {
   }
 }
 
-async function addTrigger(database, userId) {
+async function addTrigger(database, userId, trigger) {
   dbRef = ref(database);
   try {
     buyers = await getTriggers(database);
-    buyers.push({ userId: userId});
+    buyers.push({ userId: userId, trigger: trigger });
     await update(dbRef, { [TRIGGERS_DB]: buyers });
   } catch (error) {
     console.error("Error adding trigger:", error);
@@ -114,5 +119,5 @@ module.exports = {
   getProducts,
   getTriggers,
   addTrigger,
-  getIntents
+  getIntents,
 };
