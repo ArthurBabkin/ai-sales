@@ -1,5 +1,6 @@
 const { ref, child, get, update } = require("firebase/database");
 const { GROUPS_DB } = require("./constants");
+const { TRIGGERS_DB } = require("../bot/constants");
 
 async function getGroups(database) {
   dbRef = ref(database);
@@ -51,4 +52,13 @@ async function removeGroup(chatId, database) {
   }
 }
 
-module.exports = { getGroups, addGroup, removeGroup };
+async function clearTriggers(database) {
+  dbRef = ref(database);
+  try {
+    await update(dbRef, { [TRIGGERS_DB]: [] });
+  } catch (error) {
+    console.error("Error clearing triggers:", error);
+  }
+}
+
+module.exports = { getGroups, addGroup, removeGroup, clearTriggers };

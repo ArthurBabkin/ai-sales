@@ -15,7 +15,6 @@ const {
   addMessage,
   getProducts,
   addTrigger,
-  getIntents,
 } = require("./database");
 
 const firebaseConfig = {

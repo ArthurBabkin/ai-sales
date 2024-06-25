@@ -1,8 +1,15 @@
 const { Telegraf } = require("telegraf");
 const { initializeApp } = require("firebase/app");
-const { getDatabase } = require("firebase/database");
+const { getDatabase, onValue, ref } = require("firebase/database");
 const { START_MESSAGE } = require("./constants");
-const { getGroups, addGroup, removeGroup } = require("./database");
+const { TRIGGERS_DB } = require("../bot/constants");
+const { getUserId } = require("../bot/database");
+const {
+  getGroups,
+  addGroup,
+  removeGroup,
+  clearTriggers,
+} = require("./database");
 
 const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
 
@@ -45,6 +52,29 @@ bot.command("unset_group", async (ctx) => {
   }
 });
 
+const dbRef = ref(database, TRIGGERS_DB);
+onValue(dbRef, async (snapshot) => {
+  const triggers = snapshot.val();
+  await clearTriggers(database);
+  const groupIds = await getGroups(database);
+  if (!triggers || !groupIds) {  
+    return;
+  }
+  groupIds.forEach(async (groupId) => {
+    triggers.forEach(async (trigger) => {
+      try {
+      await bot.telegram.sendMessage(
+        groupId,
+        "Trigger activated!\nTrigger: " +
+          trigger["trigger"] +
+          "\nUser: " +
+          getUserId(trigger["userId"])
+      );
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
+    });
+  });
+});
+
 bot.launch();
-
-

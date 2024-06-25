@@ -113,6 +113,7 @@ async function getIntents(database) {
 }
 
 module.exports = {
+  getUserId,
   resetUser,
   getMessages,
   addMessage,
