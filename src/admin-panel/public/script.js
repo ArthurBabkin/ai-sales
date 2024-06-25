@@ -1,10 +1,12 @@
 document.addEventListener("DOMContentLoaded", function () {
   const productsBtn = document.getElementById("productsBtn");
   const intentsBtn = document.getElementById("intentsBtn");
+  const systemPromptBtn = document.getElementById("systemPromptBtn");
   const adminPanelBtn = document.getElementById("adminPanelBtn");
   const loginForm = document.getElementById("loginForm");
   const productList = document.getElementById("productList");
   const intentList = document.getElementById("intentList");
+  const systemPrompt = document.getElementById("systemPrompt");
 
   if (productsBtn) {
     productsBtn.addEventListener("click", function (event) {
@@ -17,6 +19,13 @@ document.addEventListener("DOMContentLoaded", function () {
     intentsBtn.addEventListener("click", function (event) {
       event.preventDefault();
       window.location.href = "/intents";
+    });
+  }
+
+  if (systemPromptBtn) {
+    systemPromptBtn.addEventListener("click", function (event) {
+      event.preventDefault();
+      window.location.href = "/system-prompt";
     });
   }
 
@@ -468,10 +477,70 @@ document.addEventListener("DOMContentLoaded", function () {
               }
             })
             .catch((error) => {
-              console.error("Error:", error);
               alert("An error occurred. Please try again later.");
             });
         });
       });
+  }
+
+  if (systemPrompt) {
+    fetch("/get-system-prompt")
+      .then((response) => response.json())
+      .then((data) => {
+        systemPrompt.innerHTML = "";
+        const form = document.createElement("form");
+        form.className = "form";
+        
+        const systemPromptLabel = document.createElement("label");
+        systemPromptLabel.textContent = "System Prompt:";
+        const systemPromptInput = document.createElement("textarea");
+        systemPromptInput.name = "prompt";
+        systemPromptInput.rows = 50;
+        systemPromptInput.cols = 50;
+        systemPromptInput.required = true;
+        systemPromptInput.value = data.prompt;
+
+        const updateBtn = document.createElement("input");
+        updateBtn.type = "submit";
+        updateBtn.value = "Update System Prompt";
+        updateBtn.className = "button";
+        
+        form.appendChild(systemPromptLabel);
+        form.appendChild(document.createElement("br"));
+        form.appendChild(systemPromptInput);
+        form.appendChild(document.createElement("br"));
+        form.appendChild(updateBtn);
+        
+        systemPrompt.appendChild(form);
+
+        form.addEventListener("submit", function (event) {
+          event.preventDefault();
+          const formData = new FormData(form);
+          const formObject = {};
+          formData.forEach((value, key) => {
+            formObject[key] = value;
+          });
+          
+          fetch("/update-system-prompt", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formObject),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                alert("System prompt updated successfully");
+                window.location.reload();
+              } else {
+                alert("System prompt update failed");
+              }
+            })
+            .catch((error) => {
+              alert("An error occurred. Please try again later.");
+            });
+        });
+      })
   }
 });

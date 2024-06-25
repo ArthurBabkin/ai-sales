@@ -4,6 +4,7 @@ const {
   PRODUCTS_DB,
   TRIGGERS_DB,
   INTENTS_DB,
+  SYSTEM_PROMPT_DB,
 } = require("./constants");
 
 function getUserId(userId) {
@@ -112,6 +113,21 @@ async function getIntents(database) {
   }
 }
 
+async function getSystemPrompt(database) {
+  dbRef = ref(database);
+  try {
+    const snapshot = await get(child(dbRef, SYSTEM_PROMPT_DB));
+    if (snapshot.exists()) {
+      return snapshot.val();
+    } else {
+      return "";
+    }
+  } catch (error) {
+    console.error("Error fetching system prompt:", error);
+    return "";
+  }
+}
+
 module.exports = {
   getUserId,
   resetUser,
@@ -121,4 +137,5 @@ module.exports = {
   getTriggers,
   addTrigger,
   getIntents,
+  getSystemPrompt,
 };

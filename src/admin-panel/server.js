@@ -17,9 +17,10 @@ const {
   checkSession,
   extendSession,
   generateRandomId,
+  updateSystemPrompt,
 } = require("./utils");
 const { SESSION_TIMEOUT } = require("./constants");
-const { getProducts, getIntents } = require("../bot/database");
+const { getProducts, getIntents, getSystemPrompt } = require("../bot/database");
 
 async function checkReqAuth(req, database) {
   const username = req.cookies.username;
@@ -73,6 +74,16 @@ app.get("/intents", async (req, res) => {
   if (auth) {
     await extendSession(req.cookies.username, req.cookies.sessionId, database);
     res.sendFile(path.join(__dirname, "public", "intents.html"));
+  } else {
+    res.redirect("/auth");
+  }
+});
+
+app.get("/system-prompt", async (req, res) => {
+  const auth = await checkReqAuth(req, database);
+  if (auth) {
+    await extendSession(req.cookies.username, req.cookies.sessionId, database);
+    res.sendFile(path.join(__dirname, "public", "system-prompt.html"));
   } else {
     res.redirect("/auth");
   }
@@ -231,6 +242,32 @@ app.get("/list-intents", async (req, res) => {
     res.json({ intents: intents });
   } else {
     res.json({ intents: [] });
+  }
+});
+
+app.get("/get-system-prompt", async (req, res) => {
+  const auth = await checkReqAuth(req, database);
+  if (auth) {
+    const prompt = await getSystemPrompt(database);
+    res.json({ prompt: prompt });
+  } else {
+    res.json({ prompt: "" });
+  }
+});
+
+app.post("/update-system-prompt", async (req, res) => {
+  const { prompt } = req.body;
+  const auth = await checkReqAuth(req, database);
+  if (auth) {
+    await extendSession(req.cookies.username, req.cookies.sessionId, database);
+    const code = await updateSystemPrompt(prompt, database);
+    if (code === 0) {
+      res.json({ success: true });
+    } else {
+      res.json({ success: false });
+    }
+  } else {
+    res.json({ success: false });
   }
 });
 
