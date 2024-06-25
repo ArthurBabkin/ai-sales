@@ -1,0 +1,26 @@
+{
+    "update": {
+        "update_id": 480951142,
+        "message": {
+            "message_id": 64,
+            "from": {
+                "id": 1156164691,
+                "is_bot": false,
+                "first_name": "Niktia",
+                "username": "NikitaZagainov",
+                "language_code": "en"
+            },
+            "chat": {
+                "id": 1156164691,
+                "first_name": "Nikita",
+                "username": "NikitaZagainov",
+                "type": "private"
+            },
+            "date": 1719292908,
+            "text": "/start",
+            "entities": [
+                "[Object]"
+            ]
+        }
+    }
+}
