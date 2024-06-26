@@ -5,6 +5,7 @@ const {
   TRIGGERS_DB,
   INTENTS_DB,
   SYSTEM_PROMPT_DB,
+  FORGOTTEN_CHAT_LIMIT,
 } = require("./constants");
 
 function getUserId(userId) {
@@ -44,13 +45,16 @@ async function getMessages(database, userId) {
   }
 }
 
-async function addMessage(database, userId, message) {
+async function addMessage(database, userId, message, reminder = false) {
   dbRef = ref(database);
   try {
     messages = await getMessages(database, userId);
     messages.push(message);
+    const curTimestamp = Date.now();
     await update(child(dbRef, CHATS_DB + getUserId(userId)), {
       messages: messages,
+      lastUpdate: curTimestamp,
+      reminderLast: reminder,
     });
   } catch (error) {
     console.error("Error adding a message:", error);
@@ -128,6 +132,33 @@ async function getSystemPrompt(database) {
   }
 }
 
+async function getForgottenChats(database) {
+  dbRef = ref(database);
+  try {
+    const snapshot = await get(child(dbRef, CHATS_DB));
+    if (snapshot.exists()) {
+      const chats = snapshot.val() || {};
+      forgottenChats = {};
+      const curTimestamp = Date.now();
+      Object.keys(chats).forEach((chatId) => {
+        const chat = chats[chatId];
+        if (
+          chat["lastUpdate"] < curTimestamp - FORGOTTEN_CHAT_LIMIT &&
+          !chat["reminderLast"]
+        ) {
+          forgottenChats[chatId] = chat;
+        }
+      });
+      return forgottenChats;
+    } else {
+      return {};
+    }
+  } catch (error) {
+    console.error("Error getting chats:", error);
+    return [];
+  }
+}
+
 module.exports = {
   getUserId,
   resetUser,
@@ -138,4 +169,5 @@ module.exports = {
   addTrigger,
   getIntents,
   getSystemPrompt,
+  getForgottenChats,
 };
