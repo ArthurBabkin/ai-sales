@@ -1,12 +1,13 @@
-require("dotenv").config();
 const WhatsAppBot = require("@green-api/whatsapp-bot");
 const { initializeApp } = require("firebase/app");
 const { getDatabase } = require("firebase/database");
+const axios = require("axios");
 const { getGeminiResponse, getUserIntent } = require("./api");
 const {
   HELP_MESSAGE,
   RESET_MESSAGE,
   CLASSIFIER_MESSAGE,
+  FORGOTTEN_CHAT_MESSAGE,
 } = require("./constants");
 const {
   resetUser,
@@ -16,6 +17,7 @@ const {
   addTrigger,
   getIntents,
   getSystemPrompt,
+  getForgottenChats,
 } = require("./database");
 
 const firebaseConfig = {
@@ -63,6 +65,45 @@ function checkTrigger(messageResponse, intentResponse, intents) {
   });
 
   return foundIntent;
+}
+
+async function reminder(database) {
+  const users = await getForgottenChats(database);
+  const systemPrompt = await getSystemPrompt(database);
+  const products = await getProducts(database);
+  Object.keys(users).forEach(async (user) => {
+    messages = users[user]["messages"];
+    messages.push({ role: "user", content: FORGOTTEN_CHAT_MESSAGE });
+    const message = await getGeminiResponse(
+      users[user]["messages"],
+      process.env.GEMINI_MODEL,
+      process.env.GEMINI_TOKEN,
+      process.env.PROXY_URL,
+      systemPrompt + "\nProducts:\n" + JSON.stringify(products)
+    );
+    const userId = user + "@c.us";
+    const url =
+      "https://1103.api.green-api.com/waInstance" +
+      process.env.ID_INSTANCE +
+      "/sendMessage/" +
+      process.env.API_TOKEN_INSTANCE;
+    const payload = {
+      chatId: userId,
+      message: message,
+    };
+    const headers = {
+      "Content-Type": "application/json",
+    };
+    await axios.post(url, payload, { headers: headers });
+    await addMessage(database, userId, {
+      role: "user",
+      content: FORGOTTEN_CHAT_MESSAGE,
+    });
+    await addMessage(database, userId, {
+      role: "assistant",
+      content: message,
+    });
+  });
 }
 
 const bot = new WhatsAppBot({
@@ -120,6 +161,7 @@ bot.on("message", async (ctx) => {
     const trigger = checkTrigger(message, intent, intents);
     if (trigger != null) {
       await addTrigger(database, userId, trigger);
+      await resetUser(database, userId);
       await ctx.reply("TRIGGER ACTIVATED");
       return;
     }
@@ -141,5 +183,7 @@ bot.on("message", async (ctx) => {
     await ctx.reply("Sorry, an error occurred");
   }
 });
+
+setInterval(() => reminder(database), 60 * 1000);
 
 bot.launch();
