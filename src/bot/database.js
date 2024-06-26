@@ -45,7 +45,7 @@ async function getMessages(database, userId) {
   }
 }
 
-async function addMessage(database, userId, message) {
+async function addMessage(database, userId, message, reminder = false) {
   dbRef = ref(database);
   try {
     messages = await getMessages(database, userId);
@@ -54,6 +54,7 @@ async function addMessage(database, userId, message) {
     await update(child(dbRef, CHATS_DB + getUserId(userId)), {
       messages: messages,
       lastUpdate: curTimestamp,
+      reminderLast: reminder,
     });
   } catch (error) {
     console.error("Error adding a message:", error);
@@ -141,7 +142,10 @@ async function getForgottenChats(database) {
       const curTimestamp = Date.now();
       Object.keys(chats).forEach((chatId) => {
         const chat = chats[chatId];
-        if (chat["lastUpdate"] < curTimestamp - FORGOTTEN_CHAT_LIMIT) {
+        if (
+          chat["lastUpdate"] < curTimestamp - FORGOTTEN_CHAT_LIMIT &&
+          !chat["reminderLast"]
+        ) {
           forgottenChats[chatId] = chat;
         }
       });

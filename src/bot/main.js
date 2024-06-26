@@ -99,10 +99,15 @@ async function reminder(database) {
       role: "user",
       content: FORGOTTEN_CHAT_MESSAGE,
     });
-    await addMessage(database, userId, {
-      role: "assistant",
-      content: message,
-    });
+    await addMessage(
+      database,
+      userId,
+      {
+        role: "assistant",
+        content: message,
+      },
+      true
+    );
   });
 }
 
