@@ -6,7 +6,6 @@ const { getGeminiResponse, getUserIntent } = require("./api");
 const {
   HELP_MESSAGE,
   RESET_MESSAGE,
-  SYSTEM_MESSAGE,
   CLASSIFIER_MESSAGE,
 } = require("./constants");
 const {
@@ -64,22 +63,6 @@ function checkTrigger(messageResponse, intentResponse, intents) {
   });
 
   return foundIntent;
-}
-
-function stringToJson(inputString) {
-  const jsonRegex = /{[^{}]*}/;
-  const match = inputString.match(jsonRegex);
-  if (match) {
-    try {
-      return JSON.parse(match[0]);
-    } catch (error) {
-      console.error("Error parsing JSON:", error);
-      return null;
-    }
-  } else {
-    console.error("No JSON found in the input string");
-    return null;
-  }
 }
 
 const bot = new WhatsAppBot({
