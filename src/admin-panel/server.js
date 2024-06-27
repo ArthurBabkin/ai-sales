@@ -17,7 +17,7 @@ const {
   extendSession,
   generateRandomId,
   updateSystemPrompt,
-} = require("./utils");
+} = require("./database");
 const { SESSION_TIMEOUT } = require("./constants");
 const { getProducts, getIntents, getSystemPrompt } = require("../bot/database");
 

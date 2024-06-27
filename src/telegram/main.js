@@ -1,4 +1,4 @@
-const { Telegraf } = require("telegraf");
+const { Telegraf, Markup } = require("telegraf");
 const { initializeApp } = require("firebase/app");
 const { getDatabase, onValue, ref } = require("firebase/database");
 const { START_MESSAGE } = require("./constants");
@@ -9,6 +9,7 @@ const {
   addGroup,
   removeGroup,
   clearTriggers,
+  addService,
 } = require("./database");
 
 const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
@@ -27,7 +28,6 @@ const firebaseApp = initializeApp(firebaseConfig);
 const database = getDatabase(firebaseApp);
 
 const start = async (ctx) => {
-  console.log(START_MESSAGE);
   await ctx.reply(START_MESSAGE);
 };
 
@@ -52,27 +52,36 @@ bot.command("unset_group", async (ctx) => {
   }
 });
 
+bot.action(/pick:(.+)/, async (ctx) => {
+  const userId = ctx.match[1];
+  ctx.answerCbQuery();
+  const username = ctx.from.username;
+  await addService(database, ctx.from.id, userId);
+  await ctx.editMessageText(`@${username} picked ${userId}`);
+});
+
 const dbRef = ref(database, TRIGGERS_DB);
 onValue(dbRef, async (snapshot) => {
   const triggers = snapshot.val();
   await clearTriggers(database);
   const groupIds = await getGroups(database);
-  if (!triggers || !groupIds) {  
+  if (!triggers || !groupIds) {
     return;
   }
   groupIds.forEach(async (groupId) => {
     triggers.forEach(async (trigger) => {
       try {
-      await bot.telegram.sendMessage(
-        groupId,
-        "Trigger activated!\nTrigger: " +
-          trigger["trigger"] +
-          "\nUser: " +
-          getUserId(trigger["userId"])
-      );
-    } catch (error) {
-      console.error("Error sending message:", error);
-    }
+        const userId = getUserId(trigger["userId"]);
+        await bot.telegram.sendMessage(
+          groupId,
+          `Trigger activated!\nTrigger: ${trigger["trigger"]}\nUser: ${userId}`,
+          Markup.inlineKeyboard([
+            Markup.button.callback("Pick ✅", "pick:" + userId),
+          ])
+        );
+      } catch (error) {
+        console.error("Error sending message:", error);
+      }
     });
   });
 });

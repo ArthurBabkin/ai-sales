@@ -6,5 +6,6 @@ I will be listening for updates on user front and send important information to 
 /unset_group to unset group`;
 
 GROUPS_DB = "groups/";
+SERVICES_DB = "services/"
 
-module.exports = { START_MESSAGE, GROUPS_DB };
+module.exports = { START_MESSAGE, GROUPS_DB, SERVICES_DB };
