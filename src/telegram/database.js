@@ -1,5 +1,5 @@
 const { ref, child, get, update } = require("firebase/database");
-const { GROUPS_DB } = require("./constants");
+const { GROUPS_DB, SERVICES_DB } = require("./constants");
 const { TRIGGERS_DB } = require("../bot/constants");
 
 async function getGroups(database) {
@@ -22,6 +22,7 @@ async function addGroup(chatId, database) {
   try {
     chats = await getGroups(database);
     chats.push(chatId);
+    chats = Array.from(new Set(chats));
     await update(dbRef, { [GROUPS_DB]: chats });
     return 0;
   } catch (error) {
@@ -61,4 +62,40 @@ async function clearTriggers(database) {
   }
 }
 
-module.exports = { getGroups, addGroup, removeGroup, clearTriggers };
+async function getServices(database) {
+  dbRef = ref(database);
+  try {
+    snapshot = await get(child(dbRef, SERVICES_DB));
+    sellers = {};
+    if (snapshot.exists()) {
+      sellers = snapshot.val() || {};
+    }
+    return sellers;
+  } catch (error) {
+    console.error("Error getting services:", error);
+    return {};
+  }
+}
+
+async function addService(database, sellerId, userId) {
+  dbRef = ref(database);
+  try {
+    services = await getServices(database);
+    if (!services[sellerId]) {
+      services[sellerId] = [];
+    }
+    services[sellerId].push(userId);
+    await update(dbRef, { [SERVICES_DB]: services });
+  } catch (error) {
+    console.error("Error adding service:", error);
+  }
+}
+
+module.exports = {
+  getGroups,
+  addGroup,
+  removeGroup,
+  clearTriggers,
+  getServices,
+  addService,
+};
