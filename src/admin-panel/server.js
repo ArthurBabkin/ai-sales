@@ -1,4 +1,3 @@
-require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
@@ -17,7 +16,7 @@ const {
   checkSession,
   extendSession,
   generateRandomId,
-} = require("./utils");
+} = require("./database");
 const { SESSION_TIMEOUT } = require("./constants");
 const { getProducts, getIntents } = require("../bot/database");
 
