@@ -1,8 +1,12 @@
 const bcrypt = require("bcrypt");
 const { ref, update, get, child } = require("firebase/database");
 const { ADMINS_DB, SESSIONS_DB, SESSION_TIMEOUT } = require("./constants");
-const { getProducts, getIntents } = require("../bot/database");
-const { PRODUCTS_DB, INTENTS_DB } = require("../bot/constants");
+const { getProducts, getIntents, getSystemPrompt } = require("../bot/database");
+const {
+  PRODUCTS_DB,
+  INTENTS_DB,
+  SYSTEM_PROMPT_DB,
+} = require("../bot/constants");
 
 async function addProduct(name, description, price, database) {
   dbRef = ref(database);
@@ -253,6 +257,17 @@ function generateRandomId(length = 10) {
     .substring(2, length + 2);
 }
 
+async function updateSystemPrompt(prompt, database) {
+  dbRef = ref(database);
+  try {
+    await update(dbRef, { [SYSTEM_PROMPT_DB]: prompt });
+    return 0;
+  } catch (error) {
+    console.error("Error updating system prompt:", error);
+    return 1;
+  }
+}
+
 module.exports = {
   addProduct,
   updateProduct,
@@ -266,4 +281,5 @@ module.exports = {
   extendSession,
   checkSession,
   generateRandomId,
+  updateSystemPrompt,
 };
