@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel</title>
+    <link rel="stylesheet" href="styles.css">
     <script src="script.js" defer></script>
 </head>
-
 <body>
-    <h1 style="text-align: center;">Admin Panel</h1>
-    <button id="productsBtn">Products</button>
-    <button id="intentsBtn">Intents</button>
-    <button id="systemPromptBtn">System Prompt</button>
+    <div class="container">
+        <h1>Admin Panel</h1>
+        <div class="button-container">
+            <button id="productsBtn">Products</button>
+            <button id="intentsBtn">Intents</button>
+        </div>
+        <div id="content"></div>
+    </div>
 </body>
-
 </html>
