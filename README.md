@@ -26,7 +26,8 @@ DATABASE_URL="https://ai-sales-92cf4-default-rtdb.europe-west1.firebasedatabase.
 
 The WhatsApp bot is powered by Gemini. To set up, visit [Google AI studio](https://aistudio.google.com/app/) (VPN required) and generate new API key. Set environmental variables 
 ```
-GEMINI_TOKEN=<your-api-key> GEMINI_MODEL="gemini-1.0-pro"
+GEMINI_TOKEN=<your-api-key> 
+GEMINI_MODEL="gemini-1.0-pro"
 ``` 
 Gemini is inaccessible from Russia, proxy is required to run bot, set environmental variable:
 ```

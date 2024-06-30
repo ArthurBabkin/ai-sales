@@ -7,7 +7,7 @@
     cursor: pointer;
     margin: 10px;
     transition: background-color 0.3s;
-    width: 150px; /* Задайте нужную ширину кнопке */
+    width: 150px; 
     margin: 10px auto;
 }
 
