@@ -1,10 +1,12 @@
 document.addEventListener("DOMContentLoaded", function () {
   const productsBtn = document.getElementById("productsBtn");
   const intentsBtn = document.getElementById("intentsBtn");
+  const systemPromptBtn = document.getElementById("systemPromptBtn");
   const adminPanelBtn = document.getElementById("adminPanelBtn");
   const loginForm = document.getElementById("loginForm");
   const productList = document.getElementById("productList");
   const intentList = document.getElementById("intentList");
+  const systemPrompt = document.getElementById("systemPrompt");
 
   if (productsBtn) {
     productsBtn.addEventListener("click", function (event) {
@@ -17,6 +19,13 @@ document.addEventListener("DOMContentLoaded", function () {
     intentsBtn.addEventListener("click", function (event) {
       event.preventDefault();
       window.location.href = "/intents";
+    });
+  }
+
+  if (systemPromptBtn) {
+    systemPromptBtn.addEventListener("click", function (event) {
+      event.preventDefault();
+      window.location.href = "/system-prompt";
     });
   }
 
@@ -62,7 +71,7 @@ document.addEventListener("DOMContentLoaded", function () {
       .then((response) => response.json())
       .then((data) => {
         const products = data.products;
-        productList.innerHTML = ""; 
+        productList.innerHTML = "";
         products.sort((a, b) => a["id"] - b["id"]);
         products.forEach((product) => {
           // Create a form for each product
@@ -287,10 +296,8 @@ document.addEventListener("DOMContentLoaded", function () {
       .then((response) => response.json())
       .then((data) => {
         const intents = data.intents;
-        keys = Object.keys(intents);
         intentList.innerHTML = "";
-        for (i = 0; i < keys.length; i++) {
-          const key = keys[i];
+        intents.forEach((intent) => {
           const form = document.createElement("form");
           form.className = "form";
 
@@ -298,18 +305,24 @@ document.addEventListener("DOMContentLoaded", function () {
           nameLabel.textContent = "Intent Name:";
           const nameInput = document.createElement("input");
           nameInput.type = "text";
-          nameInput.name = "name";
-          nameInput.value = key;
+          nameInput.name = "intentName";
+          nameInput.value = intent.name;
           nameInput.required = true;
 
           const descLabel = document.createElement("label");
           descLabel.textContent = "Intent Description:";
           const descInput = document.createElement("textarea");
-          descInput.name = "description";
+          descInput.name = "intentDescription";
           descInput.rows = 3;
           descInput.cols = 50;
           descInput.required = true;
-          descInput.textContent = intents[key];
+          descInput.textContent = intent.description;
+
+          // Hidden input to store product ID
+          const idInput = document.createElement("input");
+          idInput.type = "hidden";
+          idInput.name = "intentId";
+          idInput.value = intent.id;
 
           // Submit button
           const updateBtn = document.createElement("input");
@@ -330,6 +343,8 @@ document.addEventListener("DOMContentLoaded", function () {
           form.appendChild(descLabel);
           form.appendChild(document.createElement("br"));
           form.appendChild(descInput);
+          form.appendChild(document.createElement("br"));
+          form.appendChild(idInput);
           form.appendChild(updateBtn);
           form.appendChild(deleteBtn);
 
@@ -372,7 +387,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 headers: {
                   "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ name: formObject["name"] }),
+                body: JSON.stringify(formObject),
               })
                 .then((response) => response.json())
                 .then((data) => {
@@ -389,7 +404,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
             }
           });
-        }
+        });
 
         const form = document.createElement("form");
         form.className = "form";
@@ -398,25 +413,31 @@ document.addEventListener("DOMContentLoaded", function () {
         nameLabel.textContent = "Intent Name:";
         const nameInput = document.createElement("input");
         nameInput.type = "text";
-        nameInput.name = "name";
+        nameInput.name = "intentName";
         nameInput.value = "";
         nameInput.required = true;
 
         const descLabel = document.createElement("label");
         descLabel.textContent = "Intent Description:";
         const descInput = document.createElement("textarea");
-        descInput.name = "description";
+        descInput.name = "intentDescription";
         descInput.rows = 3;
         descInput.cols = 50;
         descInput.required = true;
         descInput.textContent = "";
+
+        // Hidden input to store product ID
+        const idInput = document.createElement("input");
+        idInput.type = "hidden";
+        idInput.name = "intentId";
+        idInput.value = intents.length;
 
         // Submit button
         const submitBtn = document.createElement("input");
         submitBtn.type = "submit";
         submitBtn.value = "Add Intent";
         submitBtn.className = "button";
-        
+
         // Append all elements to the form
         form.appendChild(nameLabel);
         form.appendChild(nameInput);
@@ -424,6 +445,8 @@ document.addEventListener("DOMContentLoaded", function () {
         form.appendChild(descLabel);
         form.appendChild(document.createElement("br"));
         form.appendChild(descInput);
+        form.appendChild(document.createElement("br"));
+        form.appendChild(idInput);
         form.appendChild(submitBtn);
 
         intentList.appendChild(form);
@@ -437,7 +460,7 @@ document.addEventListener("DOMContentLoaded", function () {
             formObject[key] = value;
           });
 
-          fetch("/update-intent", {
+          fetch("/submit-intent", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -454,10 +477,70 @@ document.addEventListener("DOMContentLoaded", function () {
               }
             })
             .catch((error) => {
-              console.error("Error:", error);
               alert("An error occurred. Please try again later.");
             });
         });
       });
+  }
+
+  if (systemPrompt) {
+    fetch("/get-system-prompt")
+      .then((response) => response.json())
+      .then((data) => {
+        systemPrompt.innerHTML = "";
+        const form = document.createElement("form");
+        form.className = "form";
+        
+        const systemPromptLabel = document.createElement("label");
+        systemPromptLabel.textContent = "System Prompt:";
+        const systemPromptInput = document.createElement("textarea");
+        systemPromptInput.name = "prompt";
+        systemPromptInput.rows = 50;
+        systemPromptInput.cols = 50;
+        systemPromptInput.required = true;
+        systemPromptInput.value = data.prompt;
+
+        const updateBtn = document.createElement("input");
+        updateBtn.type = "submit";
+        updateBtn.value = "Update System Prompt";
+        updateBtn.className = "button";
+        
+        form.appendChild(systemPromptLabel);
+        form.appendChild(document.createElement("br"));
+        form.appendChild(systemPromptInput);
+        form.appendChild(document.createElement("br"));
+        form.appendChild(updateBtn);
+        
+        systemPrompt.appendChild(form);
+
+        form.addEventListener("submit", function (event) {
+          event.preventDefault();
+          const formData = new FormData(form);
+          const formObject = {};
+          formData.forEach((value, key) => {
+            formObject[key] = value;
+          });
+          
+          fetch("/update-system-prompt", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formObject),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                alert("System prompt updated successfully");
+                window.location.reload();
+              } else {
+                alert("System prompt update failed");
+              }
+            })
+            .catch((error) => {
+              alert("An error occurred. Please try again later.");
+            });
+        });
+      })
   }
 });

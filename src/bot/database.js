@@ -1,5 +1,12 @@
 const { ref, get, set, child, update } = require("firebase/database");
-const { CHATS_DB, PRODUCTS_DB, TRIGGERS_DB, INTENTS_DB } = require("./constants");
+const {
+  CHATS_DB,
+  PRODUCTS_DB,
+  TRIGGERS_DB,
+  INTENTS_DB,
+  SYSTEM_PROMPT_DB,
+  FORGOTTEN_CHAT_LIMIT,
+} = require("./constants");
 
 function getUserId(userId) {
   const regex = /^[A-Za-z0-9]+$/;
@@ -38,13 +45,16 @@ async function getMessages(database, userId) {
   }
 }
 
-async function addMessage(database, userId, message) {
+async function addMessage(database, userId, message, reminder = false) {
   dbRef = ref(database);
   try {
     messages = await getMessages(database, userId);
     messages.push(message);
+    const curTimestamp = Date.now();
     await update(child(dbRef, CHATS_DB + getUserId(userId)), {
       messages: messages,
+      lastUpdate: curTimestamp,
+      reminderLast: reminder,
     });
   } catch (error) {
     console.error("Error adding a message:", error);
@@ -81,11 +91,11 @@ async function getTriggers(database) {
   }
 }
 
-async function addTrigger(database, userId) {
+async function addTrigger(database, userId, trigger) {
   dbRef = ref(database);
   try {
     buyers = await getTriggers(database);
-    buyers.push({ userId: userId});
+    buyers.push({ userId: userId, trigger: trigger });
     await update(dbRef, { [TRIGGERS_DB]: buyers });
   } catch (error) {
     console.error("Error adding trigger:", error);
@@ -107,12 +117,57 @@ async function getIntents(database) {
   }
 }
 
+async function getSystemPrompt(database) {
+  dbRef = ref(database);
+  try {
+    const snapshot = await get(child(dbRef, SYSTEM_PROMPT_DB));
+    if (snapshot.exists()) {
+      return snapshot.val();
+    } else {
+      return "";
+    }
+  } catch (error) {
+    console.error("Error fetching system prompt:", error);
+    return "";
+  }
+}
+
+async function getForgottenChats(database) {
+  dbRef = ref(database);
+  try {
+    const snapshot = await get(child(dbRef, CHATS_DB));
+    if (snapshot.exists()) {
+      const chats = snapshot.val() || {};
+      forgottenChats = {};
+      const curTimestamp = Date.now();
+      Object.keys(chats).forEach((chatId) => {
+        const chat = chats[chatId];
+        if (
+          chat["lastUpdate"] < curTimestamp - FORGOTTEN_CHAT_LIMIT &&
+          !chat["reminderLast"]
+        ) {
+          forgottenChats[chatId] = chat;
+        }
+      });
+      return forgottenChats;
+    } else {
+      return {};
+    }
+  } catch (error) {
+    console.error("Error getting chats:", error);
+    return [];
+  }
+}
+
 module.exports = {
+  getUserId,
   resetUser,
   getMessages,
   addMessage,
   getProducts,
   getTriggers,
   addTrigger,
-  getIntents
+  getIntents,
+  getSystemPrompt,
+  getForgottenChats,
 };

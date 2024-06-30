@@ -1,4 +1,3 @@
-require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
@@ -9,6 +8,7 @@ const {
   addProduct,
   updateProduct,
   deleteProduct,
+  addIntent,
   updateIntent,
   deleteIntent,
   checkAdmin,
@@ -16,9 +16,10 @@ const {
   checkSession,
   extendSession,
   generateRandomId,
-} = require("./utils");
+  updateSystemPrompt,
+} = require("./database");
 const { SESSION_TIMEOUT } = require("./constants");
-const { getProducts, getIntents } = require("../bot/database");
+const { getProducts, getIntents, getSystemPrompt } = require("../bot/database");
 
 async function checkReqAuth(req, database) {
   const username = req.cookies.username;
@@ -75,7 +76,17 @@ app.get("/intents", async (req, res) => {
   } else {
     res.redirect("/auth");
   }
-})
+});
+
+app.get("/system-prompt", async (req, res) => {
+  const auth = await checkReqAuth(req, database);
+  if (auth) {
+    await extendSession(req.cookies.username, req.cookies.sessionId, database);
+    res.sendFile(path.join(__dirname, "public", "system-prompt.html"));
+  } else {
+    res.redirect("/auth");
+  }
+});
 
 app.get("/auth", async (req, res) => {
   const auth = await checkReqAuth(req, database);
@@ -85,7 +96,6 @@ app.get("/auth", async (req, res) => {
     res.redirect("/");
   }
 });
-
 
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
@@ -171,12 +181,33 @@ app.get("/list-products", async (req, res) => {
   }
 });
 
-app.post("/update-intent", async (req, res) => {
-  const { name, description } = req.body;
+app.post("/submit-intent", async (req, res) => {
+  const { intentName, intentDescription } = req.body;
   const auth = await checkReqAuth(req, database);
   if (auth) {
     await extendSession(req.cookies.username, req.cookies.sessionId, database);
-    const code = await updateIntent(name, description, database);
+    const code = await addIntent(intentName, intentDescription, database);
+    if (code === 0) {
+      res.json({ success: true });
+    } else {
+      res.json({ success: false });
+    }
+  } else {
+    res.json({ success: false });
+  }
+});
+
+app.post("/update-intent", async (req, res) => {
+  const { intentName, intentDescription, intentId } = req.body;
+  const auth = await checkReqAuth(req, database);
+  if (auth) {
+    await extendSession(req.cookies.username, req.cookies.sessionId, database);
+    const code = await updateIntent(
+      intentName,
+      intentDescription,
+      parseInt(intentId),
+      database
+    );
     if (code === 0) {
       res.json({ success: true });
     } else {
@@ -188,11 +219,11 @@ app.post("/update-intent", async (req, res) => {
 });
 
 app.post("/delete-intent", async (req, res) => {
-  const { name } = req.body;
+  const { intentId } = req.body;
   const auth = await checkReqAuth(req, database);
   if (auth) {
     await extendSession(req.cookies.username, req.cookies.sessionId, database);
-    const code = await deleteIntent(name, database);
+    const code = await deleteIntent(parseInt(intentId), database);
     if (code === 0) {
       res.json({ success: true });
     } else {
@@ -210,6 +241,32 @@ app.get("/list-intents", async (req, res) => {
     res.json({ intents: intents });
   } else {
     res.json({ intents: [] });
+  }
+});
+
+app.get("/get-system-prompt", async (req, res) => {
+  const auth = await checkReqAuth(req, database);
+  if (auth) {
+    const prompt = await getSystemPrompt(database);
+    res.json({ prompt: prompt });
+  } else {
+    res.json({ prompt: "" });
+  }
+});
+
+app.post("/update-system-prompt", async (req, res) => {
+  const { prompt } = req.body;
+  const auth = await checkReqAuth(req, database);
+  if (auth) {
+    await extendSession(req.cookies.username, req.cookies.sessionId, database);
+    const code = await updateSystemPrompt(prompt, database);
+    if (code === 0) {
+      res.json({ success: true });
+    } else {
+      res.json({ success: false });
+    }
+  } else {
+    res.json({ success: false });
   }
 });
 
