@@ -1,0 +1,11 @@
+stages:
+  - lint
+
+lint_job:
+  stage: lint
+  image: node:latest # Using the latest Node.js Docker image
+  script:
+    - npm ci # Install dependencies
+    - npx eslint. --ext.js,.jsx,.ts,.tsx # Run ESLint on all supported file types
+  rules:
+    - if: '$CI_COMMIT_BRANCH!= null' # Ensures the job runs on every branch
