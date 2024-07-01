@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const { ref, update, get, child } = require("firebase/database");
 const { ADMINS_DB, SESSIONS_DB, SESSION_TIMEOUT } = require("./constants");
-const { getProducts, getIntents, getSystemPrompt } = require("../bot/database");
+const { getProducts, getIntents } = require("../bot/database");
 const {
   PRODUCTS_DB,
   INTENTS_DB,
