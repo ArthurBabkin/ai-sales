@@ -1,11 +1,11 @@
 stages:
   - lint
 
-lint_job:
+lint_biome:
   stage: lint
-  image: node:latest # Using the latest Node.js Docker image
+  image: node:latest # Assuming Biome requires Node.js, adjust as necessary
   script:
-    - npm ci # Install dependencies
-    - npx eslint. --ext.js,.jsx,.ts,.tsx # Run ESLint on all supported file types
-  rules:
-    - if: '$CI_COMMIT_BRANCH!= null' # Ensures the job runs on every branch
+    - npm ci # Install dependencies if needed
+    - npm run lint # Run linter
+  only:
+    - branches
