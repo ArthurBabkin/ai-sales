@@ -38,15 +38,15 @@ function squeezeMessages(
   maxSequenceLength = 30,
   maxMessageLength = 500
 ) {
-  messages = messages.slice(-maxSequenceLength);
-  for (i = 0; i < messages.length; i++) {
-    content = messages[i]["content"];
+  newMessages = messages.slice(-maxSequenceLength);
+  for (i = 0; i < newMessages.length; i++) {
+    content = newMessages[i].content;
     if (content.length > maxMessageLength) {
-      messages[i]["content"] =
-        content.substring(content.length - maxMessageLength) + "...";
+      newMessages[i].content =
+        `${content.substring(content.length - maxMessageLength)}...`;
     }
   }
-  return messages;
+  return newMessages;
 }
 
 function checkTrigger(messageResponse, intentResponse, intents) {
@@ -58,11 +58,13 @@ function checkTrigger(messageResponse, intentResponse, intents) {
   }
 
   foundIntent = null;
-  intents.forEach((intent) => {
-    if (intentResponse.toLowerCase().includes(intent["name"].toLowerCase())) {
-      foundIntent = intent["name"];
+  for (let i = 0; i < intents.length; i++) {
+    const intent = intents[i];
+    if (intentResponse.toLowerCase().includes(intent.name.toLowerCase())) {
+      foundIntent = intent.name;
+      break;
     }
-  });
+  }
 
   return foundIntent;
 }
@@ -71,22 +73,19 @@ async function reminder(database) {
   const users = await getForgottenChats(database);
   const systemPrompt = await getSystemPrompt(database);
   const products = await getProducts(database);
-  Object.keys(users).forEach(async (user) => {
-    messages = users[user]["messages"];
+  for (const user in users) {
+    const messages = users[user].messages;
     messages.push({ role: "user", content: FORGOTTEN_CHAT_MESSAGE });
     const message = await getGeminiResponse(
-      users[user]["messages"],
+      messages,
       process.env.GEMINI_MODEL,
       process.env.GEMINI_TOKEN,
       process.env.PROXY_URL,
-      systemPrompt + "\nProducts:\n" + JSON.stringify(products)
+      `${systemPrompt}\nProducts:\n${JSON.stringify(products)}`
     );
-    const userId = user + "@c.us";
+    const userId = `${user}@c.us`;
     const url =
-      "https://1103.api.green-api.com/waInstance" +
-      process.env.ID_INSTANCE +
-      "/sendMessage/" +
-      process.env.API_TOKEN_INSTANCE;
+      `https://1103.api.green-api.com/waInstance${process.env.ID_INSTANCE}/sendMessage/${process.env.API_TOKEN_INSTANCE}`;
     const payload = {
       chatId: userId,
       message: message,
@@ -108,7 +107,7 @@ async function reminder(database) {
       },
       true
     );
-  });
+  }
 }
 
 const bot = new WhatsAppBot({
@@ -160,7 +159,7 @@ bot.on("message", async (ctx) => {
       process.env.GEMINI_MODEL,
       process.env.GEMINI_TOKEN,
       process.env.PROXY_URL,
-      systemPrompt + "\nProducts:\n" + JSON.stringify(products)
+      `${systemPrompt}\nProducts:\n${JSON.stringify(products)}`
     );
 
     const trigger = checkTrigger(message, intent, intents);

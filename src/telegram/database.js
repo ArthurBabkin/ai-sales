@@ -38,7 +38,7 @@ async function removeGroup(chatId, database) {
     chats = await getGroups(database);
     newChats = [];
     for (i = 0; i < chats.length; i++) {
-      if (chats[i] != chatId) {
+      if (chats[i] !== chatId) {
         newChats.push(chats[i]);
       } else {
         code = 0;

@@ -8,18 +8,19 @@ async function getGeminiResponse(
   proxy,
   systemMessage = null
 ) {
+  newMessages = messages;
   if (systemMessage != null) {
-    messages = [{ role: "user", content: systemMessage }].concat(messages);
-  }
+    newMessages = [{ role: "user", content: systemMessage }].concat(messages);
+  } 
   geminiMessages = [];
   map = {
     user: "user",
     assistant: "model",
   };
-  for (i = 0; i < messages.length; i++) {
+  for (i = 0; i < newMessages.length; i++) {
     geminiMessages.push({
-      role: map[messages[i]["role"]],
-      parts: [{ text: messages[i]["content"] }],
+      role: map[newMessages[i].role],
+      parts: [{ text: newMessages[i].content }],
     });
   }
   const url = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${token}`;
@@ -51,14 +52,10 @@ async function getUserIntent(
   token,
   proxy
 ) {
-  prompt =
-    prompt +
-    "\nIntents:\n" +
-    JSON.stringify(intents) +
-    "\nDialogue:\n" +
-    JSON.stringify(messages);
+  const message =
+    `${prompt}\nIntents:\n${JSON.stringify(intents)}\nDialogue:\n${JSON.stringify(messages)}`;
   result = await getGeminiResponse(
-    [{ role: "user", content: prompt }],
+    [{ role: "user", content: message }],
     modelName,
     token,
     proxy

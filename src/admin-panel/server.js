@@ -1,7 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
-const path = require("path");
+const path = require("node:path");
 const { initializeApp } = require("firebase/app");
 const { getDatabase } = require("firebase/database");
 const {
@@ -120,7 +120,7 @@ app.post("/submit-product", async (req, res) => {
     const code = await addProduct(
       productName,
       productDescription,
-      parseFloat(productPrice),
+      Number.parseFloat(productPrice),
       database
     );
     if (code === 0) {
@@ -141,8 +141,8 @@ app.post("/update-product", async (req, res) => {
     const code = await updateProduct(
       name,
       description,
-      parseFloat(price),
-      parseInt(id),
+      Number.parseFloat(price),
+      Number.parseInt(id),
       database
     );
     if (code === 0) {
@@ -160,7 +160,7 @@ app.post("/delete-product", async (req, res) => {
   const auth = await checkReqAuth(req, database);
   if (auth) {
     await extendSession(req.cookies.username, req.cookies.sessionId, database);
-    const code = await deleteProduct(parseInt(id), database);
+    const code = await deleteProduct(Number.parseInt(id), database);
     if (code === 0) {
       res.json({ success: true });
     } else {
@@ -205,7 +205,7 @@ app.post("/update-intent", async (req, res) => {
     const code = await updateIntent(
       intentName,
       intentDescription,
-      parseInt(intentId),
+      Number.parseInt(intentId),
       database
     );
     if (code === 0) {
@@ -223,7 +223,7 @@ app.post("/delete-intent", async (req, res) => {
   const auth = await checkReqAuth(req, database);
   if (auth) {
     await extendSession(req.cookies.username, req.cookies.sessionId, database);
-    const code = await deleteIntent(parseInt(intentId), database);
+    const code = await deleteIntent(Number.parseInt(intentId), database);
     if (code === 0) {
       res.json({ success: true });
     } else {

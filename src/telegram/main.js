@@ -68,22 +68,24 @@ onValue(dbRef, async (snapshot) => {
   if (!triggers || !groupIds) {
     return;
   }
-  groupIds.forEach(async (groupId) => {
-    triggers.forEach(async (trigger) => {
+  for (let i = 0; i < groupIds.length; i++) {
+    const groupId = groupIds[i];
+    for (let j = 0; j < triggers.length; j++) {
+      const trigger = triggers[j];
       try {
-        const userId = getUserId(trigger["userId"]);
+        const userId = getUserId(trigger.userId);
         await bot.telegram.sendMessage(
           groupId,
-          `Trigger activated!\nTrigger: ${trigger["trigger"]}\nUser: ${userId}`,
+          `Trigger activated!\nTrigger: ${trigger.trigger}\nUser: ${userId}`,
           Markup.inlineKeyboard([
-            Markup.button.callback("Pick ✅", "pick:" + userId),
+            Markup.button.callback("Pick ✅", `pick:${userId}`),
           ])
         );
       } catch (error) {
         console.error("Error sending message:", error);
       }
-    });
-  });
+    }
+  }
 });
 
 bot.launch();

@@ -11,7 +11,7 @@ const {
 function getUserId(userId) {
   const regex = /^[A-Za-z0-9]+$/;
   if (!regex.test(userId)) {
-    let index = userId.search(/[^A-Za-z0-9]/);
+    const index = userId.search(/[^A-Za-z0-9]/);
     if (index !== -1) {
       return userId.substring(0, index);
     }
@@ -35,10 +35,9 @@ async function getMessages(database, userId) {
   try {
     const snapshot = await get(child(dbRef, CHATS_DB + getUserId(userId)));
     if (snapshot.exists()) {
-      return snapshot.val()["messages"] || [];
-    } else {
-      return [];
+      return snapshot.val().messages || [];
     }
+      return [];
   } catch (error) {
     console.error("Error fetching messages:", error);
     return [];
@@ -67,9 +66,8 @@ async function getProducts(database) {
     const snapshot = await get(child(dbRef, PRODUCTS_DB));
     if (snapshot.exists()) {
       return snapshot.val() || [];
-    } else {
-      return [];
     }
+      return [];
   } catch (error) {
     console.error("Error fetching products:", error);
     return [];
@@ -82,9 +80,8 @@ async function getTriggers(database) {
     const snapshot = await get(child(dbRef, TRIGGERS_DB));
     if (snapshot.exists()) {
       return snapshot.val() || [];
-    } else {
-      return [];
     }
+      return [];
   } catch (error) {
     console.error("Error fetching buyers:", error);
     return [];
@@ -108,9 +105,8 @@ async function getIntents(database) {
     const snapshot = await get(child(dbRef, INTENTS_DB));
     if (snapshot.exists()) {
       return snapshot.val() || [];
-    } else {
-      return [];
     }
+      return [];
   } catch (error) {
     console.error("Error fetching buyers:", error);
     return [];
@@ -123,9 +119,8 @@ async function getSystemPrompt(database) {
     const snapshot = await get(child(dbRef, SYSTEM_PROMPT_DB));
     if (snapshot.exists()) {
       return snapshot.val();
-    } else {
-      return "";
     }
+      return "";
   } catch (error) {
     console.error("Error fetching system prompt:", error);
     return "";
@@ -140,19 +135,18 @@ async function getForgottenChats(database) {
       const chats = snapshot.val() || {};
       forgottenChats = {};
       const curTimestamp = Date.now();
-      Object.keys(chats).forEach((chatId) => {
+      for (const chatId in chats) {
         const chat = chats[chatId];
         if (
-          chat["lastUpdate"] < curTimestamp - FORGOTTEN_CHAT_LIMIT &&
-          !chat["reminderLast"]
+          chat.lastUpdate < curTimestamp - FORGOTTEN_CHAT_LIMIT &&
+          !chat.reminderLast
         ) {
           forgottenChats[chatId] = chat;
         }
-      });
+      }
       return forgottenChats;
-    } else {
-      return {};
     }
+      return {};
   } catch (error) {
     console.error("Error getting chats:", error);
     return [];

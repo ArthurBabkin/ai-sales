@@ -12,9 +12,9 @@ async function addProduct(name, description, price, database) {
   dbRef = ref(database);
   try {
     products = await getProducts(database);
-    products.sort((a, b) => a["id"] - b["id"]);
+    products.sort((a, b) => a.id - b.id);
     for (i = 0; i < products.length; i++) {
-      products[i]["id"] = i;
+      products[i].id = i;
     }
     products.push({
       name: name,
@@ -35,15 +35,15 @@ async function updateProduct(name, description, price, id, database) {
   try {
     code = 1;
     products = await getProducts(database);
-    products.sort((a, b) => a["id"] - b["id"]);
+    products.sort((a, b) => a.id - b.id);
     for (i = 0; i < products.length; i++) {
-      if (products[i]["id"] === id) {
-        products[i]["name"] = name;
-        products[i]["description"] = description;
-        products[i]["price"] = price;
+      if (products[i].id === id) {
+        products[i].name = name;
+        products[i].description = description;
+        products[i].price = price;
         code = 0;
       }
-      products[i]["id"] = i;
+      products[i].id = i;
     }
     await update(dbRef, { [PRODUCTS_DB]: products });
     return code;
@@ -58,14 +58,14 @@ async function deleteProduct(id, database) {
   try {
     code = 1;
     products = await getProducts(database);
-    products.sort((a, b) => a["id"] - b["id"]);
+    products.sort((a, b) => a.id - b.id);
     newProducts = [];
     for (i = 0; i < products.length; i++) {
-      if (products[i]["id"] === id) {
+      if (products[i].id === id) {
         code = 0;
         continue;
       }
-      products[i]["id"] = i;
+      products[i].id = i;
       newProducts.push(products[i]);
     }
     await update(dbRef, { [PRODUCTS_DB]: newProducts });
@@ -84,7 +84,7 @@ async function addIntent(name, description, database) {
     code = 1;
     intents.push({ name: name, description: description });
     for (i = 0; i < intents.length; i++) {
-      intents[i]["id"] = i;
+      intents[i].id = i;
     }
     await update(dbRef, { [INTENTS_DB]: intents });
     return 0;
@@ -99,14 +99,14 @@ async function updateIntent(name, description, id, database) {
   try {
     code = 1;
     intents = await getIntents(database);
-    intents.sort((a, b) => a["id"] - b["id"]);
+    intents.sort((a, b) => a.id - b.id);
     for (i = 0; i < intents.length; i++) {
-      if (intents[i]["id"] === id) {
-        intents[i]["name"] = name;
-        intents[i]["description"] = description;
+      if (intents[i].id === id) {
+        intents[i].name = name;
+        intents[i].description = description;
         code = 0;
       }
-      intents[i]["id"] = i;
+      intents[i].id = i;
     }
     await update(dbRef, { [INTENTS_DB]: intents });
     return code;
@@ -121,14 +121,14 @@ async function deleteIntent(id, database) {
   try {
     code = 1;
     intents = await getIntents(database);
-    intents.sort((a, b) => a["id"] - b["id"]);
+    intents.sort((a, b) => a.id - b.id);
     newIntents = [];
     for (i = 0; i < intents.length; i++) {
-      if (intents[i]["id"] === id) {
+      if (intents[i].id === id) {
         code = 0;
         continue;
       }
-      intents[i]["id"] = i;
+      intents[i].id = i;
       newIntents.push(intents[i]);
     }
     await update(dbRef, { [INTENTS_DB]: newIntents });
@@ -147,16 +147,15 @@ async function checkAdmin(username, password, database) {
       const admins = snapshot.val() || [];
       for (i = 0; i < admins.length; i++) {
         if (
-          username === admins[i]["username"] &&
-          bcrypt.compareSync(password, admins[i]["password"])
+          username === admins[i].username &&
+          bcrypt.compareSync(password, admins[i].password)
         ) {
           return true;
         }
       }
       return false;
-    } else {
-      return false;
     }
+      return false;
   } catch (error) {
     console.error("Error checking admin:", error);
     return false;
@@ -169,9 +168,8 @@ async function getSessions(database) {
     const snapshot = await get(child(dbRef, SESSIONS_DB));
     if (snapshot.exists()) {
       return snapshot.val() || [];
-    } else {
-      return [];
     }
+      return [];
   } catch (error) {
     console.error("Error fetching sessions:", error);
     return [];
@@ -203,12 +201,12 @@ async function extendSession(username, sessionId, database) {
     const curTimestamp = Date.now();
     for (i = 0; i < sessions.length; i++) {
       if (
-        sessions[i]["username"] === username &&
-        bcrypt.compareSync(sessionId, sessions[i]["sessionId"])
+        sessions[i].username === username &&
+        bcrypt.compareSync(sessionId, sessions[i].sessionId)
       ) {
-        sessions[i]["expirationTimestamp"] = curTimestamp + SESSION_TIMEOUT;
+        sessions[i].expirationTimestamp = curTimestamp + SESSION_TIMEOUT;
       }
-      if (sessions[i]["expirationTimestamp"] > curTimestamp) {
+      if (sessions[i].expirationTimestamp > curTimestamp) {
         newSessions.push(sessions[i]);
       }
     }
@@ -232,13 +230,13 @@ async function checkSession(username, sessionId, database) {
     newSessions = [];
     auth = false;
     for (i = 0; i < sessions.length; i++) {
-      if (sessions[i]["expirationTimestamp"] <= curTimestamp) {
+      if (sessions[i].expirationTimestamp <= curTimestamp) {
         continue;
       }
       newSessions.push(sessions[i]);
       if (
-        sessions[i]["username"] == username &&
-        bcrypt.compareSync(sessionId, sessions[i]["sessionId"])
+        sessions[i].username === username &&
+        bcrypt.compareSync(sessionId, sessions[i].sessionId)
       ) {
         auth = true;
       }
