@@ -8,7 +8,8 @@
     "start-admin-panel": "node src/admin-panel/server.js",
     "start-telegram": "node src/telegram/main.js",
     "start": "pm2 start src/ecosystem.config.js && pm2 logs",
-    "lint": "npx biome lint"
+    "lint": "npx biome lint",
+    "test": "npx jest"
   },
   "keywords": [],
   "author": "",
