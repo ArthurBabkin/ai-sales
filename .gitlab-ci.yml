@@ -15,8 +15,11 @@ jest_test:
   stage: test
   image: node:latest
   script:
+    - apt-get update
+    - apt-get install -y openjdk-11-jdk
     - npm ci
     - npm install firebase-tools -g
+    - firebase login
     - firebase emulators:start
     - npm run test
   only:
