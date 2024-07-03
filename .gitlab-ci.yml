@@ -19,6 +19,7 @@ jest_test:
   script:
     - npm ci
     - npm install firebase-tools -g
+    - echo $GOOGLE_APPLICATION_CREDENTIALS
     - echo "$GOOGLE_CREDENTIALS" | base64 --decode > firebase.json
     - firebase init emulators
     - npm run test
