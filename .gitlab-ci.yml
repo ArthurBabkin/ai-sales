@@ -17,7 +17,7 @@ jest_test:
   script:
     - npm ci
     - npm install firebase-tools -g
-    - firebase init emulators --token "$FIREBASE_TOKEN"
+    - firebase login --token "$FIREBASE_TOKEN"
     - npm run test
   only:
     - branches
