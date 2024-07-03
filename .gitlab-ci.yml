@@ -4,14 +4,14 @@ stages:
 
 lint_biome:
   stage: lint
-  image: node:latest # Assuming Biome requires Node.js, adjust as necessary
+  image: node:20 # Assuming Biome requires Node.js, adjust as necessary
   script:
     - npm ci # Install dependencies if needed
     - npm run lint # Run linter
   only:
     - branches
 
-jest_test:
+jest_start_emulator:
   stage: test
   image: node:20
   variables:
@@ -21,6 +21,15 @@ jest_test:
     - npm install firebase-tools -g
     - echo "$GOOGLE_CREDENTIALS" | base64 --decode > creds.json
     - firebase emulators:start
-    - npm run test
   only:
     - branches
+
+  jest_test:
+    stage: test
+    image: node:20
+    needs: ["jest_start_emulator"]
+    script:
+      - npm ci
+      - npm run test
+    only:
+      - branches
