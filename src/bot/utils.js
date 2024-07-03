@@ -106,4 +106,21 @@ async function reminder(database) {
 	}
 }
 
-module.exports = { squeezeMessages, checkTrigger, reminder };
+/**
+ * Validates the userId based on the regex pattern and returns a sanitized version if needed.
+ *
+ * @param {string} userId - The user ID to validate and sanitize
+ * @return {string} The sanitized user ID
+ */
+function getUserId(userId) {
+	const regex = /^[A-Za-z0-9]+$/;
+	if (!regex.test(userId)) {
+		const index = userId.search(/[^A-Za-z0-9]/);
+		if (index !== -1) {
+			return userId.substring(0, index);
+		}
+	}
+	return userId;
+}
+
+module.exports = { squeezeMessages, checkTrigger, reminder, getUserId };

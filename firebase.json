@@ -1,0 +1,12 @@
+{
+  "emulators": {
+    "database": {
+      "port": 9000
+    },
+    "ui": {
+      "enabled": true,
+      "port": 8000
+    },
+    "singleProjectMode": true
+  }
+}
