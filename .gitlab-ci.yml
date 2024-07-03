@@ -15,8 +15,6 @@ jest_test:
   stage: test
   image: node:latest
   script:
-    - apt-get update
-    - apt-get install -y openjdk-17-jdk
     - npm ci
     - npm install firebase-tools -g
     - firebase login
