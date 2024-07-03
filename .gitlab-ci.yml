@@ -13,7 +13,7 @@ lint_biome:
 
 jest_test:
   stage: test
-  image: node:latest
+  image: node:20
   variables:
     GOOGLE_APPLICATION_CREDENTIALS: "creds.json"
   script:
