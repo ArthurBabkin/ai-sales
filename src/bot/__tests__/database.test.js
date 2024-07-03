@@ -1,5 +1,12 @@
 const { initializeApp } = require("firebase/app");
-const { getDatabase, ref, child, set, update } = require("firebase/database");
+const {
+	getDatabase,
+	ref,
+	child,
+	set,
+	update,
+	remove,
+} = require("firebase/database");
 const {
 	addMessage,
 	getMessages,
@@ -11,23 +18,37 @@ const {
 	getSystemPrompt,
 	getForgottenChats,
 } = require("../database");
-const {
-	PRODUCTS_DB,
-	INTENTS_DB,
-	TRIGGERS_DB,
-	SYSTEM_PROMPT_DB,
-	CHATS_DB,
-} = require("../constants");
 
 const firebaseConfig = {
 	apiKey: process.env.API_KEY,
 	authDomain: process.env.AUTH_DOMAIN,
-	databaseURL: "http://127.0.0.1:9000",
+	databaseURL: process.env.DATABASE_URL,
 	projectId: process.env.PROJECT_ID,
 	storageBucket: process.env.STORAGE_BUCKET,
 	messagingSenderId: process.env.MESSAGING_SENDER_ID,
 	appId: process.env.APP_ID,
 };
+
+const { FORGOTTEN_CHAT_LIMIT } = require("../constants");
+const { or } = require("firebase/firestore");
+
+const CHATS_DB = "chatsTest/";
+const PRODUCTS_DB = "productsTest/";
+const INTENTS_DB = "intentsTest/";
+const TRIGGERS_DB = "triggersTest/";
+const SYSTEM_PROMPT_DB = "systemPromptTest/";
+
+jest.mock("../constants", () => {
+	const originalModule = jest.requireActual("../constants");
+	return {
+		...originalModule,
+		CHATS_DB: CHATS_DB,
+		PRODUCTS_DB: PRODUCTS_DB,
+		INTENTS_DB: INTENTS_DB,
+		TRIGGERS_DB: TRIGGERS_DB,
+		SYSTEM_PROMPT_DB: SYSTEM_PROMPT_DB,
+	};
+});
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
@@ -124,7 +145,7 @@ test("addMessage + getForgottenChats", async () => {
 	const forgottenChats2 = await getForgottenChats(db);
 	expect(forgottenChats2).toEqual({});
 
-	const date = Date.now() - 20 * 60 * 1000;
+	const date = Date.now() - 60 * 60 * 1000;
 	await update(child(ref(db), `${CHATS_DB}/user123`), {
 		lastUpdate: date,
 	});
@@ -143,4 +164,16 @@ test("addMessage + getForgottenChats", async () => {
 	});
 	const forgottenChats4 = await getForgottenChats(db);
 	expect(forgottenChats4).toEqual({});
+});
+
+afterAll(() => {
+	for (const dbKey of [
+		CHATS_DB,
+		PRODUCTS_DB,
+		INTENTS_DB,
+		TRIGGERS_DB,
+		SYSTEM_PROMPT_DB,
+	]) {
+		remove(child(ref(db), dbKey));
+	}
 });

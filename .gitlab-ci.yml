@@ -11,23 +11,9 @@ lint_biome:
   only:
     - branches
 
-jest_start_emulator:
-  stage: test
-  image: node:20
-  variables:
-    GOOGLE_APPLICATION_CREDENTIALS: "creds.json"
-  script:
-    - npm ci
-    - npm install firebase-tools -g
-    - echo "$GOOGLE_CREDENTIALS" | base64 --decode > creds.json
-    - firebase emulators:start
-  only:
-    - branches
-
 jest_test:
   stage: test
   image: node:20
-  needs: ["jest_start_emulator"]
   script:
     - npm ci
     - npm run test
