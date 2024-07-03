@@ -15,7 +15,8 @@ jest_test:
   stage: test
   image: node:latest
   script:
-    - echo $PROXY_URL
+    - echo "Using NODE_ENV: $NODE_ENV"
+    - echo "Using PROXY_URL: $PROXY_URL"
     - npm ci
     - npm run test
   only:
