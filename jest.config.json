@@ -1,0 +1,10 @@
+{
+    "testEnvironment": "node",
+    "testMatch": [
+        "**/__tests__/**/*.test.js"
+    ],
+    "moduleFileExtensions": [
+        "js"
+    ],
+    "testTimeout": 10000
+}

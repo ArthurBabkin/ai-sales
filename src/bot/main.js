@@ -1,192 +1,113 @@
 const WhatsAppBot = require("@green-api/whatsapp-bot");
 const { initializeApp } = require("firebase/app");
 const { getDatabase } = require("firebase/database");
-const axios = require("axios");
 const { getGeminiResponse, getUserIntent } = require("./api");
 const {
-  HELP_MESSAGE,
-  RESET_MESSAGE,
-  CLASSIFIER_MESSAGE,
-  FORGOTTEN_CHAT_MESSAGE,
+	HELP_MESSAGE,
+	RESET_MESSAGE,
+	CLASSIFIER_MESSAGE,
 } = require("./constants");
 const {
-  resetUser,
-  getMessages,
-  addMessage,
-  getProducts,
-  addTrigger,
-  getIntents,
-  getSystemPrompt,
-  getForgottenChats,
+	resetUser,
+	getMessages,
+	addMessage,
+	getProducts,
+	addTrigger,
+	getIntents,
+	getSystemPrompt,
+	reminder,
 } = require("./database");
+const { squeezeMessages, checkTrigger } = require("./utils");
 
 const firebaseConfig = {
-  apiKey: process.env.API_KEY,
-  authDomain: process.env.AUTH_DOMAIN,
-  databaseURL: process.env.DATABASE_URL,
-  projectId: process.env.PROJECT_ID,
-  storageBucket: process.env.STORAGE_BUCKET,
-  messagingSenderId: process.env.MESSAGING_SENDER_ID,
-  appId: process.env.APP_ID,
+	apiKey: process.env.API_KEY,
+	authDomain: process.env.AUTH_DOMAIN,
+	databaseURL: process.env.DATABASE_URL,
+	projectId: process.env.PROJECT_ID,
+	storageBucket: process.env.STORAGE_BUCKET,
+	messagingSenderId: process.env.MESSAGING_SENDER_ID,
+	appId: process.env.APP_ID,
 };
 
 app = initializeApp(firebaseConfig);
 database = getDatabase(app);
 
-function squeezeMessages(
-  messages,
-  maxSequenceLength = 30,
-  maxMessageLength = 500
-) {
-  messages = messages.slice(-maxSequenceLength);
-  for (i = 0; i < messages.length; i++) {
-    content = messages[i]["content"];
-    if (content.length > maxMessageLength) {
-      messages[i]["content"] =
-        content.substring(content.length - maxMessageLength) + "...";
-    }
-  }
-  return messages;
-}
-
-function checkTrigger(messageResponse, intentResponse, intents) {
-  if (
-    messageResponse.toLowerCase().includes("thank") &&
-    messageResponse.toLowerCase().includes("purchase")
-  ) {
-    return "purchase";
-  }
-
-  foundIntent = null;
-  intents.forEach((intent) => {
-    if (intentResponse.toLowerCase().includes(intent["name"].toLowerCase())) {
-      foundIntent = intent["name"];
-    }
-  });
-
-  return foundIntent;
-}
-
-async function reminder(database) {
-  const users = await getForgottenChats(database);
-  const systemPrompt = await getSystemPrompt(database);
-  const products = await getProducts(database);
-  Object.keys(users).forEach(async (user) => {
-    messages = users[user]["messages"];
-    messages.push({ role: "user", content: FORGOTTEN_CHAT_MESSAGE });
-    const message = await getGeminiResponse(
-      users[user]["messages"],
-      process.env.GEMINI_MODEL,
-      process.env.GEMINI_TOKEN,
-      process.env.PROXY_URL,
-      systemPrompt + "\nProducts:\n" + JSON.stringify(products)
-    );
-    const userId = user + "@c.us";
-    const url =
-      "https://1103.api.green-api.com/waInstance" +
-      process.env.ID_INSTANCE +
-      "/sendMessage/" +
-      process.env.API_TOKEN_INSTANCE;
-    const payload = {
-      chatId: userId,
-      message: message,
-    };
-    const headers = {
-      "Content-Type": "application/json",
-    };
-    await axios.post(url, payload, { headers: headers });
-    await addMessage(database, userId, {
-      role: "user",
-      content: FORGOTTEN_CHAT_MESSAGE,
-    });
-    await addMessage(
-      database,
-      userId,
-      {
-        role: "assistant",
-        content: message,
-      },
-      true
-    );
-  });
-}
-
 const bot = new WhatsAppBot({
-  idInstance: process.env.ID_INSTANCE,
-  apiTokenInstance: process.env.API_TOKEN_INSTANCE,
+	idInstance: process.env.ID_INSTANCE,
+	apiTokenInstance: process.env.API_TOKEN_INSTANCE,
 });
 
 bot.command("reset", async (ctx) => {
-  const userId = ctx.update.message.chat.id;
-  await resetUser(database, userId);
-  await ctx.reply(RESET_MESSAGE);
+	const userId = ctx.update.message.chat.id;
+	await resetUser(database, userId);
+	await ctx.reply(RESET_MESSAGE);
 });
 
 bot.command("start", async (ctx) => {
-  const userId = ctx.update.message.chat.id;
-  await resetUser(database, userId, [
-    { role: "assistant", content: HELP_MESSAGE },
-  ]);
-  await ctx.reply(HELP_MESSAGE);
+	const userId = ctx.update.message.chat.id;
+	await resetUser(database, userId, [
+		{ role: "assistant", content: HELP_MESSAGE },
+	]);
+	await ctx.reply(HELP_MESSAGE);
 });
 
 bot.command("help", async (ctx) => {
-  await ctx.reply(HELP_MESSAGE);
+	await ctx.reply(HELP_MESSAGE);
 });
 
 bot.on("message", async (ctx) => {
-  const userId = ctx.update.message.chat.id;
-  await addMessage(database, userId, {
-    role: "user",
-    content: ctx.update.message.text,
-  });
-  messages = await getMessages(database, userId);
-  messages = squeezeMessages(messages);
-  try {
-    const systemPrompt = await getSystemPrompt(database);
-    const products = await getProducts(database);
-    const intents = await getIntents(database);
-    const intent = await getUserIntent(
-      messages,
-      intents,
-      CLASSIFIER_MESSAGE,
-      process.env.GEMINI_MODEL,
-      process.env.GEMINI_TOKEN,
-      process.env.PROXY_URL
-    );
+	const userId = ctx.update.message.chat.id;
+	await addMessage(database, userId, {
+		role: "user",
+		content: ctx.update.message.text,
+	});
+	messages = await getMessages(database, userId);
+	messages = squeezeMessages(messages);
+	try {
+		const systemPrompt = await getSystemPrompt(database);
+		const products = await getProducts(database);
+		const intents = await getIntents(database);
+		const intent = await getUserIntent(
+			messages,
+			intents,
+			CLASSIFIER_MESSAGE,
+			process.env.GEMINI_MODEL,
+			process.env.GEMINI_TOKEN,
+			process.env.PROXY_URL,
+		);
 
-    const message = await getGeminiResponse(
-      messages,
-      process.env.GEMINI_MODEL,
-      process.env.GEMINI_TOKEN,
-      process.env.PROXY_URL,
-      systemPrompt + "\nProducts:\n" + JSON.stringify(products)
-    );
+		const message = await getGeminiResponse(
+			messages,
+			process.env.GEMINI_MODEL,
+			process.env.GEMINI_TOKEN,
+			process.env.PROXY_URL,
+			`${systemPrompt}\nProducts:\n${JSON.stringify(products)}`,
+		);
 
-    const trigger = checkTrigger(message, intent, intents);
-    if (trigger != null) {
-      await addTrigger(database, userId, trigger);
-      await resetUser(database, userId);
-      await ctx.reply("TRIGGER ACTIVATED");
-      return;
-    }
+		const trigger = checkTrigger(message, intent, intents);
+		if (trigger != null) {
+			await addTrigger(database, userId, trigger);
+			await resetUser(database, userId);
+			await ctx.reply("TRIGGER ACTIVATED");
+			return;
+		}
 
-    await addMessage(database, userId, {
-      role: "assistant",
-      content: message,
-    });
+		await addMessage(database, userId, {
+			role: "assistant",
+			content: message,
+		});
 
-    await ctx.reply(message);
-  } catch (error) {
-    console.error("Error getting response:", error);
+		await ctx.reply(message);
+	} catch (error) {
+		console.error("Error getting response:", error);
 
-    await addMessage(database, userId, {
-      role: "assistant",
-      content: "Sorry, an error occurred",
-    });
+		await addMessage(database, userId, {
+			role: "assistant",
+			content: "Sorry, an error occurred",
+		});
 
-    await ctx.reply("Sorry, an error occurred");
-  }
+		await ctx.reply("Sorry, an error occurred");
+	}
 });
 
 setInterval(() => reminder(database), 60 * 1000);
