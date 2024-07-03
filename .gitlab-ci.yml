@@ -15,13 +15,13 @@ jest_test:
   stage: test
   image: node:latest
   variables:
-    GOOGLE_APPLICATION_CREDENTIALS: "firebase.json"
+    GOOGLE_APPLICATION_CREDENTIALS: "creds.json"
   script:
     - npm ci
     - npm install firebase-tools -g
     - echo $GOOGLE_APPLICATION_CREDENTIALS
-    - cat firebase.json
-    - echo "$GOOGLE_CREDENTIALS" | base64 --decode > firebase.json
+    - echo "$GOOGLE_CREDENTIALS" | base64 --decode > creds.json
+    - cat creds.json
     - firebase init emulators
     - npm run test
   only:
