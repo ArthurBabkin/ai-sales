@@ -16,6 +16,7 @@ jest_test:
   image: node:latest
   script:
     - npm ci
+    - npm install firebase-tools -g
     - firebase emulators:start
     - npm run test
   only:
