@@ -16,10 +16,10 @@ const {
 	extendSession,
 	generateRandomId,
 	updateSystemPrompt,
+	checkReqAuth,
 } = require("./database");
 const { SESSION_TIMEOUT } = require("./constants");
 const { getProducts, getIntents, getSystemPrompt } = require("../bot/database");
-const { checkReqAuth } = require("./utils");
 
 const app = express();
 const port = process.env.PORT;

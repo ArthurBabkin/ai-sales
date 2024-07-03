@@ -15,6 +15,7 @@ const {
 	addTrigger,
 	getIntents,
 	getSystemPrompt,
+	reminder,
 } = require("./database");
 const { squeezeMessages, checkTrigger } = require("./utils");
 

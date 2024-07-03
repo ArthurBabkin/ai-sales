@@ -1,13 +1,3 @@
-const axios = require("axios");
-const { getGeminiResponse } = require("./api");
-const {
-	getProducts,
-	getForgottenChats,
-	getSystemPrompt,
-	addMessage,
-} = require("./database");
-const { FORGOTTEN_CHAT_MESSAGE } = require("./constants");
-
 /**
  * Squeezes messages by truncating sequences and long messages to a specified length.
  *
@@ -61,52 +51,6 @@ function checkTrigger(messageResponse, intentResponse, intents) {
 }
 
 /**
- * Asynchronously sends reminders to users based on forgotten chats.
- *
- * @param {Object} database - The database object to retrieve information from.
- * @return {Promise<void>} A promise that resolves once all reminders are sent.
- */
-async function reminder(database) {
-	const users = await getForgottenChats(database);
-	const systemPrompt = await getSystemPrompt(database);
-	const products = await getProducts(database);
-	for (const user in users) {
-		const messages = users[user].messages;
-		messages.push({ role: "user", content: FORGOTTEN_CHAT_MESSAGE });
-		const message = await getGeminiResponse(
-			messages,
-			process.env.GEMINI_MODEL,
-			process.env.GEMINI_TOKEN,
-			process.env.PROXY_URL,
-			`${systemPrompt}\nProducts:\n${JSON.stringify(products)}`,
-		);
-		const userId = `${user}@c.us`;
-		const url = `https://1103.api.green-api.com/waInstance${process.env.ID_INSTANCE}/sendMessage/${process.env.API_TOKEN_INSTANCE}`;
-		const payload = {
-			chatId: userId,
-			message: message,
-		};
-		const headers = {
-			"Content-Type": "application/json",
-		};
-		await axios.post(url, payload, { headers: headers });
-		await addMessage(database, userId, {
-			role: "user",
-			content: FORGOTTEN_CHAT_MESSAGE,
-		});
-		await addMessage(
-			database,
-			userId,
-			{
-				role: "assistant",
-				content: message,
-			},
-			true,
-		);
-	}
-}
-
-/**
  * Validates the userId based on the regex pattern and returns a sanitized version if needed.
  *
  * @param {string} userId - The user ID to validate and sanitize
@@ -123,4 +67,4 @@ function getUserId(userId) {
 	return userId;
 }
 
-module.exports = { squeezeMessages, checkTrigger, reminder, getUserId };
+module.exports = { squeezeMessages, checkTrigger, getUserId };
