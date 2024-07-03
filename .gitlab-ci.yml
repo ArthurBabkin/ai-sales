@@ -14,10 +14,13 @@ lint_biome:
 jest_test:
   stage: test
   image: node:latest
+  variables:
+    GOOGLE_APPLICATION_CREDENTIALS: "firebase.json"
   script:
     - npm ci
     - npm install firebase-tools -g
-    - firebase login --token "$FIREBASE_TOKEN"
+    - echo "$GOOGLE_CREDENTIALS" | base64 --decode > firebase.json
+    - firebase init emulators
     - npm run test
   only:
     - branches
