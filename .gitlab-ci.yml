@@ -1,5 +1,6 @@
 stages:
   - lint
+  - test
 
 lint_biome:
   stage: lint
@@ -7,5 +8,14 @@ lint_biome:
   script:
     - npm ci # Install dependencies if needed
     - npm run lint # Run linter
+  only:
+    - branches
+
+jest_test:
+  stage: test
+  image: node:latest
+  script:
+    - npm ci
+    - npm run test
   only:
     - branches
