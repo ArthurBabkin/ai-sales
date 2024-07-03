@@ -24,12 +24,12 @@ jest_start_emulator:
   only:
     - branches
 
-  jest_test:
-    stage: test
-    image: node:20
-    needs: ["jest_start_emulator"]
-    script:
-      - npm ci
-      - npm run test
-    only:
-      - branches
+jest_test:
+  stage: test
+  image: node:20
+  needs: ["jest_start_emulator"]
+  script:
+    - npm ci
+    - npm run test
+  only:
+    - branches
