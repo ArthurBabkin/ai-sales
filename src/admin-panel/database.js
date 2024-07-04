@@ -1,11 +1,13 @@
 const bcrypt = require("bcrypt");
 const { ref, update, get, child } = require("firebase/database");
 const { ADMINS_DB, SESSIONS_DB, SESSION_TIMEOUT } = require("./constants");
+const { getEmbedding } = require("../bot/api");
 const { getProducts, getIntents } = require("../bot/database");
 const {
 	PRODUCTS_DB,
 	INTENTS_DB,
 	SYSTEM_PROMPT_DB,
+	VECTOR_DB_NAMESPACE,
 } = require("../bot/constants");
 
 /**
@@ -15,23 +17,45 @@ const {
  * @param {string} description - The description of the product.
  * @param {number} price - The price of the product.
  * @param {object} database - The Firebase Realtime Database reference.
+ * @param {object} [index=null] - The vector database index.
  * @return {Promise<number>} Returns 0 if the product was added successfully, or 1 if an error occurred.
  */
-async function addProduct(name, description, price, database) {
+async function addProduct(name, description, price, database, index = null) {
 	dbRef = ref(database);
 	try {
 		products = await getProducts(database);
-		products.sort((a, b) => a.id - b.id);
+		id = 0;
 		for (i = 0; i < products.length; i++) {
-			products[i].id = i;
+			const product = products[i];
+			id = Math.max(id, product.id + 1);
 		}
 		products.push({
 			name: name,
 			description: description,
 			price: price,
-			id: products.length,
+			id: id,
 		});
 		await update(dbRef, { [PRODUCTS_DB]: products });
+		if (index !== null) {
+			await index.namespace(VECTOR_DB_NAMESPACE).deleteOne(String(id));
+			await index.namespace(VECTOR_DB_NAMESPACE).upsert([
+				{
+					id: String(id),
+					values: await getEmbedding(
+						JSON.stringify(products[i]),
+						process.env.EMBEDDING_MODEL,
+						process.env.GEMINI_TOKEN,
+						process.env.PROXY_URL,
+					),
+					metadata: {
+						name: name,
+						description: description,
+						id: id,
+						price: price,
+					},
+				},
+			]);
+		}
 		return 0;
 	} catch (error) {
 		console.error("Error adding new product:", error);
@@ -47,24 +71,54 @@ async function addProduct(name, description, price, database) {
  * @param {number} price - The new price of the product.
  * @param {number} id - The ID of the product to be updated.
  * @param {object} database - The Firebase Realtime Database reference.
+ * @param {object} [index=null] - The vector database index.
  * @return {Promise<number>} Returns 0 if the product was updated successfully, or 1 if an error occurred.
  */
-async function updateProduct(name, description, price, id, database) {
+async function updateProduct(
+	name,
+	description,
+	price,
+	id,
+	database,
+	index = null,
+) {
 	dbRef = ref(database);
 	try {
 		code = 1;
 		products = await getProducts(database);
-		products.sort((a, b) => a.id - b.id);
+		updatedProduct = null;
 		for (i = 0; i < products.length; i++) {
 			if (products[i].id === id) {
 				products[i].name = name;
 				products[i].description = description;
 				products[i].price = price;
+				updatedProduct = products[i];
 				code = 0;
+				break;
 			}
-			products[i].id = i;
 		}
 		await update(dbRef, { [PRODUCTS_DB]: products });
+		if (index != null && updateProduct != null) {
+			const vector = await getEmbedding(
+				JSON.stringify(updatedProduct),
+				process.env.EMBEDDING_MODEL,
+				process.env.GEMINI_TOKEN,
+				process.env.PROXY_URL,
+			)
+			await index.namespace(VECTOR_DB_NAMESPACE).deleteOne(String(id));
+			await index.namespace(VECTOR_DB_NAMESPACE).upsert([
+				{
+					id: String(id),
+					values: vector,
+					metadata: {
+						name: name,
+						description: description,
+						id: id,
+						price: price,
+					},
+				},
+			]);
+		}
 		return code;
 	} catch (error) {
 		console.error("Error updating product:", error);
@@ -77,24 +131,26 @@ async function updateProduct(name, description, price, id, database) {
  *
  * @param {number} id - The ID of the product to be deleted.
  * @param {object} database - The Firebase Realtime Database reference.
+ * @param {object} [index=null] - The vector database index.
  * @return {Promise<number>} Returns 0 if the product was deleted successfully, or 1 if an error occurred.
  */
-async function deleteProduct(id, database) {
+async function deleteProduct(id, database, index = null) {
 	dbRef = ref(database);
 	try {
 		code = 1;
 		products = await getProducts(database);
-		products.sort((a, b) => a.id - b.id);
 		newProducts = [];
 		for (i = 0; i < products.length; i++) {
 			if (products[i].id === id) {
 				code = 0;
 				continue;
 			}
-			products[i].id = i;
 			newProducts.push(products[i]);
 		}
 		await update(dbRef, { [PRODUCTS_DB]: newProducts });
+		if (index != null) {
+			await index.namespace(VECTOR_DB_NAMESPACE).deleteOne(String(id));
+		}
 		return code;
 	} catch (error) {
 		console.error("Error deleting product:", error);
@@ -116,10 +172,12 @@ async function addIntent(name, description, database) {
 		const snapshot = await get(child(dbRef, INTENTS_DB));
 		const intents = snapshot.val() || [];
 		code = 1;
-		intents.push({ name: name, description: description });
+		newId = 0;
 		for (i = 0; i < intents.length; i++) {
-			intents[i].id = i;
+			const intent = intents[i];
+			newId = Math.max(newId, intent.id + 1);
 		}
+		intents.push({ name: name, description: description, id: newId });
 		await update(dbRef, { [INTENTS_DB]: intents });
 		return 0;
 	} catch (error) {
@@ -142,14 +200,12 @@ async function updateIntent(name, description, id, database) {
 	try {
 		code = 1;
 		intents = await getIntents(database);
-		intents.sort((a, b) => a.id - b.id);
 		for (i = 0; i < intents.length; i++) {
 			if (intents[i].id === id) {
 				intents[i].name = name;
 				intents[i].description = description;
 				code = 0;
 			}
-			intents[i].id = i;
 		}
 		await update(dbRef, { [INTENTS_DB]: intents });
 		return code;
@@ -171,14 +227,12 @@ async function deleteIntent(id, database) {
 	try {
 		code = 1;
 		intents = await getIntents(database);
-		intents.sort((a, b) => a.id - b.id);
 		newIntents = [];
 		for (i = 0; i < intents.length; i++) {
 			if (intents[i].id === id) {
 				code = 0;
 				continue;
 			}
-			intents[i].id = i;
 			newIntents.push(intents[i]);
 		}
 		await update(dbRef, { [INTENTS_DB]: newIntents });
@@ -381,6 +435,35 @@ async function checkReqAuth(req, database) {
 	const auth = await checkSession(username, sessionId, database);
 	return auth;
 }
+
+/**
+ * Updates the vector database by deleting all existing vectors and re-inserting new vectors based on the products in the database.
+ *
+ * @param {Object} database - The database object.
+ * @param {Object} index - The index object.
+ * @return {Promise<void>} A Promise that resolves when the vector database is updated.
+ */
+async function updateVectorDatabase(database, index) {
+	const products = await getProducts(database);
+	try {
+		index.namespace(VECTOR_DB_NAMESPACE).deleteAll();
+	} catch (error) {
+		console.error("Error deleting vector database:", error);
+	}
+
+	for (i = 0; i < products.length; i++) {
+		const product = products[i];
+		const vector = await getEmbedding(
+			JSON.stringify(product),
+			process.env.EMBEDDING_MODEL,
+			process.env.GEMINI_TOKEN,
+			process.env.PROXY_URL,
+		);
+		index
+			.namespace(VECTOR_DB_NAMESPACE)
+			.upsert([{ id: String(product.id), values: vector, metadata: product }]);
+	}
+}
 module.exports = {
 	addProduct,
 	updateProduct,
@@ -396,4 +479,5 @@ module.exports = {
 	generateRandomId,
 	updateSystemPrompt,
 	checkReqAuth,
+	updateVectorDatabase,
 };
