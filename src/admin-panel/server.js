@@ -4,6 +4,7 @@ const cookieParser = require("cookie-parser");
 const path = require("node:path");
 const { initializeApp } = require("firebase/app");
 const { getDatabase } = require("firebase/database");
+const { Pinecone } = require("@pinecone-database/pinecone");
 const {
 	addProduct,
 	updateProduct,
@@ -17,9 +18,16 @@ const {
 	generateRandomId,
 	updateSystemPrompt,
 	checkReqAuth,
+	updateVectorDatabase,
 } = require("./database");
 const { SESSION_TIMEOUT } = require("./constants");
 const { getProducts, getIntents, getSystemPrompt } = require("../bot/database");
+const { INDEX_NAME } = require("../bot/constants");
+
+const pc = new Pinecone({
+	apiKey: process.env.PINECONE_TOKEN,
+});
+const index = pc.index(INDEX_NAME);
 
 const app = express();
 const port = process.env.PORT;
@@ -116,6 +124,7 @@ app.post("/submit-product", async (req, res) => {
 			productDescription,
 			Number.parseFloat(productPrice),
 			database,
+			index,
 		);
 		if (code === 0) {
 			res.json({ success: true });
@@ -138,6 +147,7 @@ app.post("/update-product", async (req, res) => {
 			Number.parseFloat(price),
 			Number.parseInt(id),
 			database,
+			index,
 		);
 		if (code === 0) {
 			res.json({ success: true });
@@ -154,7 +164,7 @@ app.post("/delete-product", async (req, res) => {
 	const auth = await checkReqAuth(req, database);
 	if (auth) {
 		await extendSession(req.cookies.username, req.cookies.sessionId, database);
-		const code = await deleteProduct(Number.parseInt(id), database);
+		const code = await deleteProduct(Number.parseInt(id), database, index);
 		if (code === 0) {
 			res.json({ success: true });
 		} else {
@@ -264,7 +274,7 @@ app.post("/update-system-prompt", async (req, res) => {
 	}
 });
 
-// Start the server
 app.listen(port, () => {
+	updateVectorDatabase(database, index);
 	console.log(`Server is running on http://localhost:${port}`);
 });

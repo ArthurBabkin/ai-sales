@@ -10,6 +10,7 @@ const FORGOTTEN_CHAT_MESSAGE = `This is a system message.
 It seems that your client has left the conversation for a while. Try to get them back to the dialogue by analyzing their conversation history and resuming accordingly.`;
 
 const FORGOTTEN_CHAT_LIMIT = 10 * 60 * 1000;
+const TOP_K_PRODUCTS = 3;
 
 const CHATS_DB = "chats/";
 const PRODUCTS_DB = "products/";
@@ -17,16 +18,21 @@ const TRIGGERS_DB = "triggers/";
 const INTENTS_DB = "intents/";
 const SYSTEM_PROMPT_DB = "systemPrompt/";
 
+const INDEX_NAME = "ai-sales";
+const VECTOR_DB_NAMESPACE = "products";
 
 module.exports = {
-  RESET_MESSAGE,
-  HELP_MESSAGE,
-  CLASSIFIER_MESSAGE,
-  FORGOTTEN_CHAT_MESSAGE,
-  FORGOTTEN_CHAT_LIMIT,
-  CHATS_DB,
-  PRODUCTS_DB,
-  TRIGGERS_DB,
-  INTENTS_DB,
-  SYSTEM_PROMPT_DB,
+	RESET_MESSAGE,
+	HELP_MESSAGE,
+	CLASSIFIER_MESSAGE,
+	FORGOTTEN_CHAT_MESSAGE,
+	FORGOTTEN_CHAT_LIMIT,
+	TOP_K_PRODUCTS,
+	CHATS_DB,
+	PRODUCTS_DB,
+	TRIGGERS_DB,
+	INTENTS_DB,
+	SYSTEM_PROMPT_DB,
+	INDEX_NAME,
+	VECTOR_DB_NAMESPACE,
 };

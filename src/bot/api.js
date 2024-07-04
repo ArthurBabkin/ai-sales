@@ -12,46 +12,46 @@ const { HttpsProxyAgent } = require("https-proxy-agent");
  * @return {string|number} The generated response or an error code.
  */
 async function getGeminiResponse(
-  messages,
-  modelName,
-  token,
-  proxy,
-  systemMessage = null
+	messages,
+	modelName,
+	token,
+	proxy,
+	systemMessage = null,
 ) {
-  newMessages = messages;
-  if (systemMessage != null) {
-    newMessages = [{ role: "user", content: systemMessage }].concat(messages);
-  } 
-  geminiMessages = [];
-  map = {
-    user: "user",
-    assistant: "model",
-  };
-  for (i = 0; i < newMessages.length; i++) {
-    geminiMessages.push({
-      role: map[newMessages[i].role],
-      parts: [{ text: newMessages[i].content }],
-    });
-  }
-  const url = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${token}`;
-  const agent = new HttpsProxyAgent(proxy);
-  try {
-    const response = await axios({
-      method: "post",
-      url: url,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: {
-        contents: geminiMessages,
-      },
-      httpsAgent: agent,
-    });
-    return response.data.candidates[0].content.parts[0].text;
-  } catch (error) {
-    console.error("Error getting response:", error);
-    return 1;
-  }
+	newMessages = messages;
+	if (systemMessage != null) {
+		newMessages = [{ role: "user", content: systemMessage }].concat(messages);
+	}
+	geminiMessages = [];
+	map = {
+		user: "user",
+		assistant: "model",
+	};
+	for (i = 0; i < newMessages.length; i++) {
+		geminiMessages.push({
+			role: map[newMessages[i].role],
+			parts: [{ text: newMessages[i].content }],
+		});
+	}
+	const url = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${token}`;
+	const agent = new HttpsProxyAgent(proxy);
+	try {
+		const response = await axios({
+			method: "post",
+			url: url,
+			headers: {
+				"Content-Type": "application/json",
+			},
+			data: {
+				contents: geminiMessages,
+			},
+			httpsAgent: agent,
+		});
+		return response.data.candidates[0].content.parts[0].text;
+	} catch (error) {
+		console.error("Error getting response:", error);
+		return 1;
+	}
 }
 
 /**
@@ -66,22 +66,58 @@ async function getGeminiResponse(
  * @return {Promise<string>} The result of the user's intent.
  */
 async function getUserIntent(
-  messages,
-  intents,
-  prompt,
-  modelName,
-  token,
-  proxy
+	messages,
+	intents,
+	prompt,
+	modelName,
+	token,
+	proxy,
 ) {
-  const message =
-    `${prompt}\nIntents:\n${JSON.stringify(intents)}\nDialogue:\n${JSON.stringify(messages)}`;
-  result = await getGeminiResponse(
-    [{ role: "user", content: message }],
-    modelName,
-    token,
-    proxy
-  );
-  return result;
+	const message = `${prompt}\nIntents:\n${JSON.stringify(intents)}\nDialogue:\n${JSON.stringify(messages)}`;
+	result = await getGeminiResponse(
+		[{ role: "user", content: message }],
+		modelName,
+		token,
+		proxy,
+	);
+	return result;
 }
 
-module.exports = { getGeminiResponse, getUserIntent };
+/**
+ * Retrieves the embedding of a given text using a specific model and API token.
+ *
+ * @param {string} text - The text to get the embedding of.
+ * @param {string} modelName - The name of the model to use.
+ * @param {string} token - The API token for authentication.
+ * @param {string} proxy - The proxy URL.
+ * @return {Promise<Array<number>>} A promise that resolves to an array of numbers representing the embedding.
+ */
+async function getEmbedding(text, modelName, token, proxy) {
+	try {
+		const data = {
+			model: `models/${modelName}`,
+			content: {
+				parts: [
+					{
+						text: text,
+					},
+				],
+			},
+		};
+		agent = new HttpsProxyAgent(proxy);
+
+		const response = await axios({
+			method: "post",
+			url: `https://generativelanguage.googleapis.com/v1beta/models/embedding-001:embedContent?key=${token}`,
+			headers: { "Content-Type": "application/json" },
+			data: JSON.stringify(data),
+			httpsAgent: agent,
+		});
+
+		return response.data.embedding.values;
+	} catch (error) {
+		console.error("Error getting embedding:", error);
+	}
+}
+
+module.exports = { getGeminiResponse, getUserIntent, getEmbedding };
