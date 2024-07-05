@@ -260,19 +260,27 @@ async function reminder(database) {
 	}
 }
 
+/**
+Retrieves the top K products from Pinecone database based on customer message.
+@param {string} message - The message from user with product from catalog.
+ */
 async function getKProducts(message){
+
+	// Connection to the db.
 	const index = pc.index('ai-sales');
 	model = process.env.EMBEDDING_MODEL
 	token = process.env.GEMINI_TOKEN
 	proxy = process.env.PROXY_URL
 	embedding = await getEmbedding(message, model, token, proxy)
 
+	// Getting query.
 	const queryResponse = await index.namespace(VECTOR_DB_NAMESPACE).query({
 		vector: embedding,
 		topK: TOP_K_PRODUCTS,
 		includeMetadata: true
 	});
 
+	// Converting query to json.
 	result = JSON.stringify(queryResponse)
 	console.log(result)
 }
