@@ -10,7 +10,7 @@ const {
 	FORGOTTEN_CHAT_LIMIT,
 } = require("./constants");
 const { getUserId } = require("./utils");
-const constants = require("constants");
+const constants = require("./constants");
 const {getEmbedding} = require("./api");
 const { Pinecone } = require('@pinecone-database/pinecone');
 const pc = new Pinecone({
