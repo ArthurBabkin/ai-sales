@@ -6,6 +6,7 @@ const {
 	HELP_MESSAGE,
 	RESET_MESSAGE,
 	CLASSIFIER_MESSAGE,
+	INDEX_NAME,
 } = require("./constants");
 const {
 	resetUser,
@@ -16,8 +17,16 @@ const {
 	getIntents,
 	getSystemPrompt,
 	reminder,
+	getKProducts,
 } = require("./database");
 const { squeezeMessages, checkTrigger } = require("./utils");
+const { Pinecone } = require("@pinecone-database/pinecone");
+
+const pc = new Pinecone({
+	apiKey: process.env.PINECONE_TOKEN,
+});
+
+const index = pc.index(INDEX_NAME);
 
 const firebaseConfig = {
 	apiKey: process.env.API_KEY,
@@ -57,15 +66,16 @@ bot.command("help", async (ctx) => {
 
 bot.on("message", async (ctx) => {
 	const userId = ctx.update.message.chat.id;
+	const userMessage = ctx.update.message.text;
 	await addMessage(database, userId, {
 		role: "user",
-		content: ctx.update.message.text,
+		content: userMessage,
 	});
 	messages = await getMessages(database, userId);
 	messages = squeezeMessages(messages);
 	try {
 		const systemPrompt = await getSystemPrompt(database);
-		const products = await getProducts(database);
+		const products = await getKProducts(userMessage, index);
 		const intents = await getIntents(database);
 		const intent = await getUserIntent(
 			messages,

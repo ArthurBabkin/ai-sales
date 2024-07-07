@@ -1,5 +1,4 @@
-const { VECTOR_DB_NAMESPACE } = require("./constants")
-const { TOP_K_PRODUCTS } = require("./constants")
+const { TOP_K_PRODUCTS } = require("./constants");
 const { ref, get, set, child, update } = require("firebase/database");
 const {
 	CHATS_DB,
@@ -8,14 +7,12 @@ const {
 	INTENTS_DB,
 	SYSTEM_PROMPT_DB,
 	FORGOTTEN_CHAT_LIMIT,
+	INDEX_NAME,
+	VECTOR_DB_NAMESPACE,
 } = require("./constants");
 const { getUserId } = require("./utils");
-const constants = require("./constants");
-const {getEmbedding} = require("./api");
-const { Pinecone } = require('@pinecone-database/pinecone');
-const pc = new Pinecone({
-	apiKey:  process.env.PINECONE_TOKEN
-});
+const { getEmbedding } = require("./api");
+
 
 /**
  * Resets the user's chat history in the database.
@@ -260,29 +257,32 @@ async function reminder(database) {
 	}
 }
 
-/**
-Retrieves the top K products from Pinecone database based on customer message.
-@param {string} message - The message from user with product from catalog.
- */
-async function getKProducts(message){
 
-	// Connection to the db.
-	const index = pc.index('ai-sales');
-	model = process.env.EMBEDDING_MODEL
-	token = process.env.GEMINI_TOKEN
-	proxy = process.env.PROXY_URL
-	embedding = await getEmbedding(message, model, token, proxy)
+/**
+ * Retrieves top K products based on the provided message and index.
+ *
+ * @param {string} message - The message to retrieve products for.
+ * @param {object} index - The index to use for querying products.
+ * @return {string} A JSON string representing the query response.
+ */
+async function getKProducts(message, index) {
+	model = process.env.EMBEDDING_MODEL;
+	token = process.env.GEMINI_TOKEN;
+	proxy = process.env.PROXY_URL;
+	embedding = await getEmbedding(message, model, token, proxy);
 
 	// Getting query.
 	const queryResponse = await index.namespace(VECTOR_DB_NAMESPACE).query({
 		vector: embedding,
 		topK: TOP_K_PRODUCTS,
-		includeMetadata: true
+		includeMetadata: true,
 	});
 
-	// Converting query to json.
-	result = JSON.stringify(queryResponse)
-	console.log(result)
+	products = []
+	for (i = 0; i < queryResponse.matches.length; i++) {
+		products.push(queryResponse.matches[i].metadata);
+	}
+	return products;
 }
 
 module.exports = {
@@ -297,5 +297,5 @@ module.exports = {
 	getSystemPrompt,
 	getForgottenChats,
 	reminder,
-	getKProducts
+	getKProducts,
 };
