@@ -75,7 +75,7 @@ bot.on("message", async (ctx) => {
 	messages = squeezeMessages(messages);
 	try {
 		const systemPrompt = await getSystemPrompt(database);
-		const products = await getKProducts(userMessage, index);
+		const products = await getKProducts(JSON.stringify(messages), index);
 		const intents = await getIntents(database);
 		const intent = await getUserIntent(
 			messages,
