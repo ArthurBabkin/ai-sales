@@ -33,7 +33,7 @@ function squeezeMessages(
 function checkTrigger(messageResponse, intentResponse, intents) {
 	if (
 		messageResponse.toLowerCase().includes("thank") &&
-		messageResponse.toLowerCase().includes("purchase")
+		messageResponse.toLowerCase().includes("purchas")
 	) {
 		return "purchase";
 	}
