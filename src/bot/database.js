@@ -1,3 +1,5 @@
+const { VECTOR_DB_NAMESPACE } = require("./constants")
+const { TOP_K_PRODUCTS } = require("./constants")
 const { ref, get, set, child, update } = require("firebase/database");
 const {
 	CHATS_DB,
@@ -8,6 +10,12 @@ const {
 	FORGOTTEN_CHAT_LIMIT,
 } = require("./constants");
 const { getUserId } = require("./utils");
+const constants = require("./constants");
+const {getEmbedding} = require("./api");
+const { Pinecone } = require('@pinecone-database/pinecone');
+const pc = new Pinecone({
+	apiKey:  process.env.PINECONE_TOKEN
+});
 
 /**
  * Resets the user's chat history in the database.
@@ -252,6 +260,31 @@ async function reminder(database) {
 	}
 }
 
+/**
+Retrieves the top K products from Pinecone database based on customer message.
+@param {string} message - The message from user with product from catalog.
+ */
+async function getKProducts(message){
+
+	// Connection to the db.
+	const index = pc.index('ai-sales');
+	model = process.env.EMBEDDING_MODEL
+	token = process.env.GEMINI_TOKEN
+	proxy = process.env.PROXY_URL
+	embedding = await getEmbedding(message, model, token, proxy)
+
+	// Getting query.
+	const queryResponse = await index.namespace(VECTOR_DB_NAMESPACE).query({
+		vector: embedding,
+		topK: TOP_K_PRODUCTS,
+		includeMetadata: true
+	});
+
+	// Converting query to json.
+	result = JSON.stringify(queryResponse)
+	console.log(result)
+}
+
 module.exports = {
 	getUserId,
 	resetUser,
@@ -264,4 +297,5 @@ module.exports = {
 	getSystemPrompt,
 	getForgottenChats,
 	reminder,
+	getKProducts
 };
