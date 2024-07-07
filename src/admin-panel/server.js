@@ -38,11 +38,6 @@ const {
 } = require("../bot/database");
 const { INDEX_NAME } = require("../bot/constants");
 
-const pc = new Pinecone({
-	apiKey: process.env.PINECONE_TOKEN,
-});
-const index = pc.index(INDEX_NAME);
-
 const app = express();
 const port = process.env.PORT;
 

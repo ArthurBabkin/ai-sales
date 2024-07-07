@@ -129,9 +129,9 @@ async function getTriggers(database) {
 async function addTrigger(database, userId, trigger) {
 	dbRef = ref(database);
 	try {
-		buyers = await getTriggers(database);
-		buyers.push({ userId: userId, trigger: trigger });
-		await update(dbRef, { [TRIGGERS_DB]: buyers });
+		triggers = await getTriggers(database);
+		triggers.push({ userId: userId, trigger: trigger });
+		await update(dbRef, { [TRIGGERS_DB]: triggers });
 	} catch (error) {
 		console.error("Error adding trigger:", error);
 	}
@@ -152,7 +152,7 @@ async function getIntents(database) {
 		}
 		return [];
 	} catch (error) {
-		console.error("Error fetching buyers:", error);
+		console.error("Error fetching intents:", error);
 		return [];
 	}
 }

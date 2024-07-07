@@ -594,6 +594,7 @@ async function updateVectorDatabase(database, index) {
 			.upsert([{ id: String(item.id), values: vector, metadata: item }]);
 	}
 }
+
 module.exports = {
 	addItem,
 	updateItem,
