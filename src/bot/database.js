@@ -7,7 +7,7 @@ const {
 	INTENTS_DB,
 	SYSTEM_PROMPT_DB,
 	FORGOTTEN_CHAT_LIMIT,
-	INDEX_NAME,
+	FORGOTTEN_CHAT_MESSAGE,
 	VECTOR_DB_NAMESPACE,
 } = require("./constants");
 const { getUserId } = require("./utils");
