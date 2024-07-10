@@ -7,6 +7,8 @@ const {
 	PRODUCTS_DB,
 	INTENTS_DB,
 	SYSTEM_PROMPT_DB,
+	CLASSIFIER_PROMPT_DB,
+	REMINDER_PROMPT_DB,
 	VECTOR_DB_NAMESPACE,
 } = require("../bot/constants");
 
@@ -422,6 +424,28 @@ async function updateSystemPrompt(prompt, database) {
 	}
 }
 
+async function updateClassifierPrompt(prompt, database) {
+	dbRef = ref(database);
+	try {
+		await update(dbRef, { [CLASSIFIER_PROMPT_DB]: prompt });
+		return 0;
+	} catch (error) {
+		console.error("Error updating classifier prompt:", error);
+		return 1;
+	}
+}
+
+async function updateReminderPrompt(prompt, database) {
+	dbRef = ref(database);
+	try {
+		await update(dbRef, { [REMINDER_PROMPT_DB]: prompt });
+		return 0;
+	} catch (error) {
+		console.error("Error updating reminder prompt:", error);
+		return 1;
+	}
+}
+
 /**
  * Checks the authentication status of a request.
  *
@@ -478,6 +502,8 @@ module.exports = {
 	checkSession,
 	generateRandomId,
 	updateSystemPrompt,
+	updateClassifierPrompt,
+	updateReminderPrompt,
 	checkReqAuth,
 	updateVectorDatabase,
 };

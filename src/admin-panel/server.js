@@ -17,11 +17,19 @@ const {
 	extendSession,
 	generateRandomId,
 	updateSystemPrompt,
+	updateClassifierPrompt,
+	updateReminderPrompt,
 	checkReqAuth,
 	updateVectorDatabase,
 } = require("./database");
 const { SESSION_TIMEOUT } = require("./constants");
-const { getProducts, getIntents, getSystemPrompt } = require("../bot/database");
+const {
+	getProducts,
+	getIntents,
+	getSystemPrompt,
+	getClassifierPrompt,
+	getReminderPrompt,
+} = require("../bot/database");
 const { INDEX_NAME } = require("../bot/constants");
 
 const pc = new Pinecone({
@@ -80,11 +88,11 @@ app.get("/intents", async (req, res) => {
 	}
 });
 
-app.get("/system-prompt", async (req, res) => {
+app.get("/system-prompts", async (req, res) => {
 	const auth = await checkReqAuth(req, database);
 	if (auth) {
 		await extendSession(req.cookies.username, req.cookies.sessionId, database);
-		res.sendFile(path.join(__dirname, "public", "system-prompt.html"));
+		res.sendFile(path.join(__dirname, "public", "system-prompts.html"));
 	} else {
 		res.redirect("/auth");
 	}
@@ -258,6 +266,26 @@ app.get("/get-system-prompt", async (req, res) => {
 	}
 });
 
+app.get("/get-classifier-prompt", async (req, res) => {
+	const auth = await checkReqAuth(req, database);
+	if (auth) {
+		const prompt = await getClassifierPrompt(database);
+		res.json({ prompt: prompt });
+	} else {
+		res.json({ prompt: "" });
+	}
+});
+
+app.get("/get-reminder-prompt", async (req, res) => {
+	const auth = await checkReqAuth(req, database);
+	if (auth) {
+		const prompt = await getReminderPrompt(database);
+		res.json({ prompt: prompt });
+	} else {
+		res.json({ prompt: "" });
+	}
+});
+
 app.post("/update-system-prompt", async (req, res) => {
 	const { prompt } = req.body;
 	const auth = await checkReqAuth(req, database);
@@ -274,7 +302,40 @@ app.post("/update-system-prompt", async (req, res) => {
 	}
 });
 
+app.post("/update-classifier-prompt", async (req, res) => {
+	const { prompt } = req.body;
+	const auth = await checkReqAuth(req, database);
+	if (auth) {
+		await extendSession(req.cookies.username, req.cookies.sessionId, database);
+		const code = await updateClassifierPrompt(prompt, database);
+		if (code === 0) {
+			res.json({ success: true });
+		} else {
+			res.json({ success: false });
+		}
+	} else {
+		res.json({ success: false });
+	}
+});
+
+app.post("/update-reminder-prompt", async (req, res) => {
+	const { prompt } = req.body;
+	const auth = await checkReqAuth(req, database);
+	if (auth) {
+		await extendSession(req.cookies.username, req.cookies.sessionId, database);
+		const code = await updateReminderPrompt(prompt, database);
+		if (code === 0) {
+			res.json({ success: true });
+		} else {
+			res.json({ success: false });
+		}
+	} else {
+		res.json({ success: false });
+	}
+});
+
+setInterval(() => updateVectorDatabase(database, index), 20 * 60 * 1000);
+
 app.listen(port, () => {
-	updateVectorDatabase(database, index);
 	console.log(`Server is running on http://localhost:${port}`);
 });

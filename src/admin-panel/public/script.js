@@ -7,6 +7,8 @@ document.addEventListener("DOMContentLoaded", () => {
 	const productList = document.getElementById("productList");
 	const intentList = document.getElementById("intentList");
 	const systemPrompt = document.getElementById("systemPrompt");
+	const classifierPrompt = document.getElementById("classifierPrompt");
+	const reminderPrompt = document.getElementById("reminderPrompt");
 
 	if (productsBtn) {
 		productsBtn.addEventListener("click", (event) => {
@@ -25,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
 	if (systemPromptBtn) {
 		systemPromptBtn.addEventListener("click", (event) => {
 			event.preventDefault();
-			window.location.href = "/system-prompt";
+			window.location.href = "/system-prompts";
 		});
 	}
 
@@ -489,7 +491,6 @@ document.addEventListener("DOMContentLoaded", () => {
 		fetch("/get-system-prompt")
 			.then((response) => response.json())
 			.then((data) => {
-				systemPrompt.innerHTML = "";
 				const form = document.createElement("form");
 				form.className = "form";
 
@@ -497,7 +498,7 @@ document.addEventListener("DOMContentLoaded", () => {
 				systemPromptLabel.textContent = "System Prompt:";
 				const systemPromptInput = document.createElement("textarea");
 				systemPromptInput.name = "prompt";
-				systemPromptInput.rows = 50;
+				systemPromptInput.rows = 20;
 				systemPromptInput.cols = 50;
 				systemPromptInput.required = true;
 				systemPromptInput.value = data.prompt;
@@ -513,7 +514,7 @@ document.addEventListener("DOMContentLoaded", () => {
 				form.appendChild(document.createElement("br"));
 				form.appendChild(updateBtn);
 
-				systemPrompt.appendChild(form);
+				systemPrompts.appendChild(form);
 
 				form.addEventListener("submit", (event) => {
 					event.preventDefault();
@@ -537,6 +538,126 @@ document.addEventListener("DOMContentLoaded", () => {
 								window.location.reload();
 							} else {
 								alert("System prompt update failed");
+							}
+						})
+						.catch((error) => {
+							alert("An error occurred. Please try again later.");
+						});
+				});
+			});
+	}
+
+	if (classifierPrompt) {
+		fetch("/get-classifier-prompt")
+			.then((response) => response.json())
+			.then((data) => {
+				const form = document.createElement("form");
+				form.className = "form";
+
+				const classifierPromptLabel = document.createElement("label");
+				classifierPromptLabel.textContent = "Classifier Prompt:";
+				const classifierPromptInput = document.createElement("textarea");
+				classifierPromptInput.name = "prompt";
+				classifierPromptInput.rows = 20;
+				classifierPromptInput.cols = 50;
+				classifierPromptInput.required = true;
+				classifierPromptInput.value = data.prompt;
+
+				const updateBtn = document.createElement("input");
+				updateBtn.type = "submit";
+				updateBtn.value = "Update System Prompt";
+				updateBtn.className = "button";
+
+				form.appendChild(classifierPromptLabel);
+				form.appendChild(document.createElement("br"));
+				form.appendChild(classifierPromptInput);
+				form.appendChild(document.createElement("br"));
+				form.appendChild(updateBtn);
+
+				systemPrompts.appendChild(form);
+
+				form.addEventListener("submit", (event) => {
+					event.preventDefault();
+					const formData = new FormData(form);
+					const formObject = {};
+					formData.forEach((value, key) => {
+						formObject[key] = value;
+					});
+
+					fetch("/update-classifier-prompt", {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify(formObject),
+					})
+						.then((response) => response.json())
+						.then((data) => {
+							if (data.success) {
+								alert("Classifier prompt updated successfully");
+								window.location.reload();
+							} else {
+								alert("Classifier prompt update failed");
+							}
+						})
+						.catch((error) => {
+							alert("An error occurred. Please try again later.");
+						});
+				});
+			});
+	}
+
+	if (reminderPrompt) {
+		fetch("/get-reminder-prompt")
+			.then((response) => response.json())
+			.then((data) => {
+				const form = document.createElement("form");
+				form.className = "form";
+
+				const reminderPromptLabel = document.createElement("label");
+				reminderPromptLabel.textContent = "Reminder Prompt:";
+				const reminderPromptInput = document.createElement("textarea");
+				reminderPromptInput.name = "prompt";
+				reminderPromptInput.rows = 20;
+				reminderPromptInput.cols = 50;
+				reminderPromptInput.required = true;
+				reminderPromptInput.value = data.prompt;
+
+				const updateBtn = document.createElement("input");
+				updateBtn.type = "submit";
+				updateBtn.value = "Update System Prompt";
+				updateBtn.className = "button";
+
+				form.appendChild(reminderPromptLabel);
+				form.appendChild(document.createElement("br"));
+				form.appendChild(reminderPromptInput);
+				form.appendChild(document.createElement("br"));
+				form.appendChild(updateBtn);
+
+				systemPrompts.appendChild(form);
+
+				form.addEventListener("submit", (event) => {
+					event.preventDefault();
+					const formData = new FormData(form);
+					const formObject = {};
+					formData.forEach((value, key) => {
+						formObject[key] = value;
+					});
+
+					fetch("/update-reminder-prompt", {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify(formObject),
+					})
+						.then((response) => response.json())
+						.then((data) => {
+							if (data.success) {
+								alert("Reminder prompt updated successfully");
+								window.location.reload();
+							} else {
+								alert("Reminder prompt update failed");
 							}
 						})
 						.catch((error) => {
