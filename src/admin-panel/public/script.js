@@ -565,7 +565,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 				const updateBtn = document.createElement("input");
 				updateBtn.type = "submit";
-				updateBtn.value = "Update System Prompt";
+				updateBtn.value = "Update Classifier Prompt";
 				updateBtn.className = "button";
 
 				form.appendChild(classifierPromptLabel);
@@ -625,7 +625,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 				const updateBtn = document.createElement("input");
 				updateBtn.type = "submit";
-				updateBtn.value = "Update System Prompt";
+				updateBtn.value = "Update Reminder Prompt";
 				updateBtn.className = "button";
 
 				form.appendChild(reminderPromptLabel);
