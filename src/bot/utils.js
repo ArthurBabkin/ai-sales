@@ -30,14 +30,7 @@ function squeezeMessages(
  * @param {Array<Object>} intents - An array of intents.
  * @return {string|null} The found intent or null if no intent is found.
  */
-function checkTrigger(messageResponse, intentResponse, intents) {
-	if (
-		messageResponse.toLowerCase().includes("thank") &&
-		messageResponse.toLowerCase().includes("purchas")
-	) {
-		return "purchase";
-	}
-
+function checkTrigger(intentResponse, intents) {
 	foundIntent = null;
 	for (let i = 0; i < intents.length; i++) {
 		const intent = intents[i];
@@ -66,5 +59,6 @@ function getUserId(userId) {
 	}
 	return userId;
 }
+
 
 module.exports = { squeezeMessages, checkTrigger, getUserId };

@@ -1,18 +1,20 @@
 const { TOP_K_PRODUCTS } = require("./constants");
 const { ref, get, set, child, update } = require("firebase/database");
+const axios = require("axios");
 const {
 	CHATS_DB,
 	PRODUCTS_DB,
 	TRIGGERS_DB,
 	INTENTS_DB,
 	SYSTEM_PROMPT_DB,
-	FORGOTTEN_CHAT_LIMIT,
-	FORGOTTEN_CHAT_MESSAGE,
+	CLASSIFIER_PROMPT_DB,
+	REMINDER_PROMPT_DB,
+	REMINDER_LIMIT,
+	REMINDER_MESSAGE,
 	VECTOR_DB_NAMESPACE,
 } = require("./constants");
 const { getUserId } = require("./utils");
-const { getEmbedding } = require("./api");
-
+const { getGeminiResponse, getEmbedding } = require("./api");
 
 /**
  * Resets the user's chat history in the database.
@@ -176,6 +178,34 @@ async function getSystemPrompt(database) {
 	}
 }
 
+async function getClassifierPrompt(database) {
+	dbRef = ref(database);
+	try {
+		const snapshot = await get(child(dbRef, CLASSIFIER_PROMPT_DB));
+		if (snapshot.exists()) {
+			return snapshot.val();
+		}
+		return "";
+	} catch (error) {
+		console.error("Error fetching classifier prompt:", error);
+		return "";
+	}
+}
+
+async function getReminderPrompt(database) {
+	dbRef = ref(database);
+	try {
+		const snapshot = await get(child(dbRef, REMINDER_PROMPT_DB));
+		if (snapshot.exists()) {
+			return snapshot.val();
+		}
+		return "";
+	} catch (error) {
+		console.error("Error fetching reminder prompt:", error);
+		return "";
+	}
+}
+
 /**
  * Retrieves the forgotten chats from the given Firebase Realtime Database instance.
  *
@@ -196,7 +226,7 @@ async function getForgottenChats(database) {
 			for (const chatId in chats) {
 				const chat = chats[chatId];
 				if (
-					chat.lastUpdate < curTimestamp - FORGOTTEN_CHAT_LIMIT &&
+					chat.lastUpdate < curTimestamp - REMINDER_LIMIT &&
 					!chat.reminderLast
 				) {
 					forgottenChats[chatId] = chat;
@@ -210,53 +240,6 @@ async function getForgottenChats(database) {
 		return [];
 	}
 }
-
-/**
- * Asynchronously sends reminders to users based on forgotten chats.
- *
- * @param {Object} database - The database object to retrieve information from.
- * @return {Promise<void>} A promise that resolves once all reminders are sent.
- */
-async function reminder(database) {
-	const users = await getForgottenChats(database);
-	const systemPrompt = await getSystemPrompt(database);
-	const products = await getProducts(database);
-	for (const user in users) {
-		const messages = users[user].messages;
-		messages.push({ role: "user", content: FORGOTTEN_CHAT_MESSAGE });
-		const message = await getGeminiResponse(
-			messages,
-			process.env.GEMINI_MODEL,
-			process.env.GEMINI_TOKEN,
-			process.env.PROXY_URL,
-			`${systemPrompt}\nProducts:\n${JSON.stringify(products)}`,
-		);
-		const userId = `${user}@c.us`;
-		const url = `https://1103.api.green-api.com/waInstance${process.env.ID_INSTANCE}/sendMessage/${process.env.API_TOKEN_INSTANCE}`;
-		const payload = {
-			chatId: userId,
-			message: message,
-		};
-		const headers = {
-			"Content-Type": "application/json",
-		};
-		await axios.post(url, payload, { headers: headers });
-		await addMessage(database, userId, {
-			role: "user",
-			content: FORGOTTEN_CHAT_MESSAGE,
-		});
-		await addMessage(
-			database,
-			userId,
-			{
-				role: "assistant",
-				content: message,
-			},
-			true,
-		);
-	}
-}
-
 
 /**
  * Retrieves top K products based on the provided message and index.
@@ -278,11 +261,67 @@ async function getKProducts(message, index) {
 		includeMetadata: true,
 	});
 
-	products = []
+	products = [];
 	for (i = 0; i < queryResponse.matches.length; i++) {
 		products.push(queryResponse.matches[i].metadata);
 	}
 	return products;
+}
+
+/**
+ * Asynchronously sends reminders to users based on forgotten chats.
+ *
+ * @param {Object} database - The database object to retrieve information from.
+ * @return {Promise<void>} A promise that resolves once all reminders are sent.
+ */
+async function reminder(database) {
+	const users = await getForgottenChats(database);
+	const systemPrompt = await getSystemPrompt(database);
+	const products = await getProducts(database);
+	for (const user in users) {
+		const messages = users[user].messages;
+		const reminderPrompt = await getReminderPrompt(database);
+		messages.push({ role: "user", content: reminderPrompt });
+		const message = await getGeminiResponse(
+			messages,
+			process.env.GEMINI_MODEL,
+			process.env.GEMINI_TOKEN,
+			process.env.PROXY_URL,
+			`${systemPrompt}\nProducts:\n${JSON.stringify(products)}`,
+		);
+		if (message === 1) {
+			console.error("Error generating reminder message. Proceeding with others");
+			continue; 
+		}
+		const userId = `${user}@c.us`;
+		const url = `https://1103.api.green-api.com/waInstance${process.env.ID_INSTANCE}/sendMessage/${process.env.API_TOKEN_INSTANCE}`;
+		const payload = {
+			chatId: userId,
+			message: message,
+		};
+		const headers = {
+			"Content-Type": "application/json",
+		};
+		try {
+		await axios.post(url, payload, { headers: headers });
+		} catch (error) {
+			console.error("Error sending reminder:", error);
+			continue;
+		}
+		await addMessage(database, userId, {
+			role: "user",
+			content: reminderPrompt,
+		});
+		await addMessage(
+			database,
+			userId,
+			{
+				role: "assistant",
+				content: message,
+			},
+			true,
+		);
+	}
 }
 
 module.exports = {
@@ -295,7 +334,9 @@ module.exports = {
 	addTrigger,
 	getIntents,
 	getSystemPrompt,
+	getClassifierPrompt,
+	getReminderPrompt,
 	getForgottenChats,
-	reminder,
 	getKProducts,
+	reminder,
 };
