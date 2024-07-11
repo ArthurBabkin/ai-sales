@@ -4,10 +4,10 @@ To reset chat history, type /start or /reset
 To display this message, type /help`;
 
 const REMINDER_LIMIT = 10 * 60 * 1000;
-const TOP_K_PRODUCTS = 3;
+const TOP_K_ITEMS = 3;
 
 const CHATS_DB = "chats/";
-const PRODUCTS_DB = "products/";
+const ITEMS_DB = "items/";
 const TRIGGERS_DB = "triggers/";
 const INTENTS_DB = "intents/";
 const SYSTEM_PROMPT_DB = "systemPrompt/";
@@ -16,15 +16,15 @@ const REMINDER_PROMPT_DB = "reminderPrompt/";
 
 
 const INDEX_NAME = "ai-sales";
-const VECTOR_DB_NAMESPACE = "products";
+const VECTOR_DB_NAMESPACE = "items";
 
 module.exports = {
 	RESET_MESSAGE,
 	HELP_MESSAGE,
 	REMINDER_LIMIT,
-	TOP_K_PRODUCTS,
+	TOP_K_ITEMS,
 	CHATS_DB,
-	PRODUCTS_DB,
+	ITEMS_DB,
 	TRIGGERS_DB,
 	INTENTS_DB,
 	SYSTEM_PROMPT_DB,

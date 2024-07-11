@@ -1,19 +1,19 @@
 document.addEventListener("DOMContentLoaded", () => {
-	const productsBtn = document.getElementById("productsBtn");
+	const itemsBtn = document.getElementById("itemsBtn");
 	const intentsBtn = document.getElementById("intentsBtn");
 	const systemPromptBtn = document.getElementById("systemPromptBtn");
 	const adminPanelBtn = document.getElementById("adminPanelBtn");
 	const loginForm = document.getElementById("loginForm");
-	const productList = document.getElementById("productList");
+	const itemList = document.getElementById("itemList");
 	const intentList = document.getElementById("intentList");
 	const systemPrompt = document.getElementById("systemPrompt");
 	const classifierPrompt = document.getElementById("classifierPrompt");
 	const reminderPrompt = document.getElementById("reminderPrompt");
 
-	if (productsBtn) {
-		productsBtn.addEventListener("click", (event) => {
+	if (itemsBtn) {
+		itemsBtn.addEventListener("click", (event) => {
 			event.preventDefault();
-			window.location.href = "/products";
+			window.location.href = "/items";
 		});
 	}
 
@@ -68,64 +68,54 @@ document.addEventListener("DOMContentLoaded", () => {
 		});
 	}
 
-	if (productList) {
-		fetch("/list-products")
+	if (itemList) {
+		fetch("/list-items")
 			.then((response) => response.json())
 			.then((data) => {
-				const products = data.products;
-				productList.innerHTML = "";
-				products.sort((a, b) => a.id - b.id);
-				for (let i = 0; i < products.length; i++) {
-					const product = products[i];
-					// Create a form for each product
+				const items = data.items;
+				itemList.innerHTML = "";
+				items.sort((a, b) => a.id - b.id);
+				for (let i = 0; i < items.length; i++) {
+					const item = items[i];
+					// Create a form for each item
 					const form = document.createElement("form");
 					form.className = "form";
 
-					// Product Name
+					// Item Name
 					const nameLabel = document.createElement("label");
-					nameLabel.textContent = "Product Name:";
+					nameLabel.textContent = "Item Name:";
 					const nameInput = document.createElement("input");
 					nameInput.type = "text";
 					nameInput.name = "name";
-					nameInput.value = product.name;
+					nameInput.value = item.name;
 					nameInput.required = true;
 
-					// Product Description
+					// Item Description
 					const descLabel = document.createElement("label");
-					descLabel.textContent = "Product Description:";
+					descLabel.textContent = "Item Description:";
 					const descInput = document.createElement("textarea");
 					descInput.name = "description";
 					descInput.rows = 6;
 					descInput.cols = 50;
 					descInput.required = true;
-					descInput.textContent = product.description;
+					descInput.textContent = item.description;
 
-					// Product Price
-					const priceLabel = document.createElement("label");
-					priceLabel.textContent = "Product Price:";
-					const priceInput = document.createElement("input");
-					priceInput.type = "number";
-					priceInput.name = "price";
-					priceInput.step = "0.01";
-					priceInput.value = product.price;
-					priceInput.required = true;
-
-					// Hidden input to store product ID
+					// Hidden input to store item ID
 					const idInput = document.createElement("input");
 					idInput.type = "hidden";
 					idInput.name = "id";
-					idInput.value = product.id;
+					idInput.value = item.id;
 
 					// Submit button
 					const updateBtn = document.createElement("input");
 					updateBtn.type = "submit";
-					updateBtn.value = "Update Product";
+					updateBtn.value = "Update Item";
 					updateBtn.className = "button";
 
 					// Delete button
 					const deleteBtn = document.createElement("input");
 					deleteBtn.type = "submit";
-					deleteBtn.value = "Delete Product";
+					deleteBtn.value = "Delete Item";
 					deleteBtn.className = "button";
 
 					// Append all elements to the form
@@ -136,15 +126,12 @@ document.addEventListener("DOMContentLoaded", () => {
 					form.appendChild(document.createElement("br"));
 					form.appendChild(descInput);
 					form.appendChild(document.createElement("br"));
-					form.appendChild(priceLabel);
-					form.appendChild(priceInput);
-					form.appendChild(document.createElement("br"));
 					form.appendChild(idInput);
 					form.appendChild(updateBtn);
 					form.appendChild(deleteBtn);
 
-					// Append the form to the product list
-					productList.appendChild(form);
+					// Append the form to the item list
+					itemList.appendChild(form);
 
 					// Add event listener to handle form submission
 					form.addEventListener("submit", (event) => {
@@ -156,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
 						});
 
 						if (event.submitter === updateBtn) {
-							fetch("/update-product", {
+							fetch("/update-item", {
 								method: "POST",
 								headers: {
 									"Content-Type": "application/json",
@@ -166,10 +153,10 @@ document.addEventListener("DOMContentLoaded", () => {
 								.then((response) => response.json())
 								.then((data) => {
 									if (data.success) {
-										alert("Product updated successfully");
+										alert("Item updated successfully");
 										window.location.reload();
 									} else {
-										alert("Product update failed");
+										alert("Item update failed");
 									}
 								})
 								.catch((error) => {
@@ -177,7 +164,7 @@ document.addEventListener("DOMContentLoaded", () => {
 									alert("An error occurred. Please try again later.");
 								});
 						} else if (event.submitter === deleteBtn) {
-							fetch("/delete-product", {
+							fetch("/delete-item", {
 								method: "POST",
 								headers: {
 									"Content-Type": "application/json",
@@ -187,10 +174,10 @@ document.addEventListener("DOMContentLoaded", () => {
 								.then((response) => response.json())
 								.then((data) => {
 									if (data.success) {
-										alert("Product deleted successfully");
+										alert("Item deleted successfully");
 										window.location.reload();
 									} else {
-										alert("Product deletion failed");
+										alert("Item deletion failed");
 									}
 								})
 								.catch((error) => {
@@ -201,46 +188,37 @@ document.addEventListener("DOMContentLoaded", () => {
 					});
 				}
 
-				// Create a form for new product
+				// Create a form for new item
 				const form = document.createElement("form");
 				form.className = "form";
 
-				// Product Name
+				// Item Name
 				const nameLabel = document.createElement("label");
-				nameLabel.textContent = "Product Name:";
+				nameLabel.textContent = "Item Name:";
 				const nameInput = document.createElement("input");
 				nameInput.type = "text";
-				nameInput.name = "productName";
+				nameInput.name = "itemName";
 				nameInput.required = true;
 
-				// Product Description
+				// Item Description
 				const descLabel = document.createElement("label");
-				descLabel.textContent = "Product Description:";
+				descLabel.textContent = "Item Description:";
 				const descInput = document.createElement("textarea");
-				descInput.name = "productDescription";
+				descInput.name = "itemDescription";
 				descInput.rows = 6;
 				descInput.cols = 50;
 				descInput.required = true;
 
-				// Product Price
-				const priceLabel = document.createElement("label");
-				priceLabel.textContent = "Product Price:";
-				const priceInput = document.createElement("input");
-				priceInput.type = "number";
-				priceInput.name = "productPrice";
-				priceInput.step = "0.01";
-				priceInput.required = true;
-
-				// Hidden input to store product ID
+				// Hidden input to store item ID
 				const idInput = document.createElement("input");
 				idInput.type = "hidden";
-				idInput.name = "productId";
-				idInput.value = productList.length;
+				idInput.name = "itemId";
+				idInput.value = itemList.length;
 
 				// Submit button
 				const submitBtn = document.createElement("input");
 				submitBtn.type = "submit";
-				submitBtn.value = "Add Product";
+				submitBtn.value = "Add Item";
 				submitBtn.className = "Button";
 
 				// Append all elements to the form
@@ -251,14 +229,11 @@ document.addEventListener("DOMContentLoaded", () => {
 				form.appendChild(document.createElement("br"));
 				form.appendChild(descInput);
 				form.appendChild(document.createElement("br"));
-				form.appendChild(priceLabel);
-				form.appendChild(priceInput);
-				form.appendChild(document.createElement("br"));
 				form.appendChild(idInput);
 				form.appendChild(submitBtn);
 
-				// Append the form to the product list
-				productList.appendChild(form);
+				// Append the form to the item list
+				itemList.appendChild(form);
 
 				// Add event listener to handle form submission
 				form.addEventListener("submit", (event) => {
@@ -270,7 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
 						formObject[key] = value;
 					});
 
-					fetch("/submit-product", {
+					fetch("/submit-item", {
 						method: "POST",
 						headers: {
 							"Content-Type": "application/json",
@@ -280,10 +255,10 @@ document.addEventListener("DOMContentLoaded", () => {
 						.then((response) => response.json())
 						.then((data) => {
 							if (data.success) {
-								alert("Product added successfully");
+								alert("Item added successfully");
 								window.location.reload();
 							} else {
-								alert("Product add failed");
+								alert("Item add failed");
 							}
 						})
 						.catch((error) => {
@@ -322,7 +297,7 @@ document.addEventListener("DOMContentLoaded", () => {
 					descInput.required = true;
 					descInput.textContent = intent.description;
 
-					// Hidden input to store product ID
+					// Hidden input to store item ID
 					const idInput = document.createElement("input");
 					idInput.type = "hidden";
 					idInput.name = "intentId";
@@ -430,7 +405,7 @@ document.addEventListener("DOMContentLoaded", () => {
 				descInput.required = true;
 				descInput.textContent = "";
 
-				// Hidden input to store product ID
+				// Hidden input to store item ID
 				const idInput = document.createElement("input");
 				idInput.type = "hidden";
 				idInput.name = "intentId";

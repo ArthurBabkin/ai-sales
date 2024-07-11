@@ -6,9 +6,9 @@ const { initializeApp } = require("firebase/app");
 const { getDatabase } = require("firebase/database");
 const { Pinecone } = require("@pinecone-database/pinecone");
 const {
-	addProduct,
-	updateProduct,
-	deleteProduct,
+	addItem,
+	updateItem,
+	deleteItem,
 	addIntent,
 	updateIntent,
 	deleteIntent,
@@ -24,7 +24,7 @@ const {
 } = require("./database");
 const { SESSION_TIMEOUT } = require("./constants");
 const {
-	getProducts,
+	getItems,
 	getIntents,
 	getSystemPrompt,
 	getClassifierPrompt,
@@ -68,11 +68,11 @@ app.get("/", async (req, res) => {
 	}
 });
 
-app.get("/products", async (req, res) => {
+app.get("/items", async (req, res) => {
 	const auth = await checkReqAuth(req, database);
 	if (auth) {
 		await extendSession(req.cookies.username, req.cookies.sessionId, database);
-		res.sendFile(path.join(__dirname, "public", "products.html"));
+		res.sendFile(path.join(__dirname, "public", "items.html"));
 	} else {
 		res.redirect("/auth");
 	}
@@ -122,15 +122,14 @@ app.post("/login", async (req, res) => {
 	}
 });
 
-app.post("/submit-product", async (req, res) => {
-	const { productName, productDescription, productPrice } = req.body;
+app.post("/submit-item", async (req, res) => {
+	const { itemName, itemDescription } = req.body;
 	const auth = await checkReqAuth(req, database);
 	if (auth) {
 		await extendSession(req.cookies.username, req.cookies.sessionId, database);
-		const code = await addProduct(
-			productName,
-			productDescription,
-			Number.parseFloat(productPrice),
+		const code = await addItem(
+			itemName,
+			itemDescription,
 			database,
 			index,
 		);
@@ -144,15 +143,14 @@ app.post("/submit-product", async (req, res) => {
 	}
 });
 
-app.post("/update-product", async (req, res) => {
-	const { name, description, price, id } = req.body;
+app.post("/update-item", async (req, res) => {
+	const { name, description, id } = req.body;
 	const auth = await checkReqAuth(req, database);
 	if (auth) {
 		await extendSession(req.cookies.username, req.cookies.sessionId, database);
-		const code = await updateProduct(
+		const code = await updateItem(
 			name,
 			description,
-			Number.parseFloat(price),
 			Number.parseInt(id),
 			database,
 			index,
@@ -167,12 +165,12 @@ app.post("/update-product", async (req, res) => {
 	}
 });
 
-app.post("/delete-product", async (req, res) => {
+app.post("/delete-item", async (req, res) => {
 	const { id } = req.body;
 	const auth = await checkReqAuth(req, database);
 	if (auth) {
 		await extendSession(req.cookies.username, req.cookies.sessionId, database);
-		const code = await deleteProduct(Number.parseInt(id), database, index);
+		const code = await deleteItem(Number.parseInt(id), database, index);
 		if (code === 0) {
 			res.json({ success: true });
 		} else {
@@ -183,13 +181,13 @@ app.post("/delete-product", async (req, res) => {
 	}
 });
 
-app.get("/list-products", async (req, res) => {
+app.get("/list-items", async (req, res) => {
 	const auth = await checkReqAuth(req, database);
 	if (auth) {
-		const products = await getProducts(database);
-		res.json({ products: products });
+		const items = await getItems(database);
+		res.json({ items: items });
 	} else {
-		res.json({ products: [] });
+		res.json({ items: [] });
 	}
 });
 

@@ -1,9 +1,9 @@
-const { TOP_K_PRODUCTS } = require("./constants");
+const { TOP_K_ITEMS } = require("./constants");
 const { ref, get, set, child, update } = require("firebase/database");
 const axios = require("axios");
 const {
 	CHATS_DB,
-	PRODUCTS_DB,
+	ITEMS_DB,
 	TRIGGERS_DB,
 	INTENTS_DB,
 	SYSTEM_PROMPT_DB,
@@ -81,21 +81,21 @@ async function addMessage(database, userId, message, reminder = false) {
 }
 
 /**
- * Retrieves the products from the database.
+ * Retrieves the items from the database.
  *
  * @param {Object} database - The Firebase Realtime Database instance.
- * @return {Promise<Array<Object>>} - A promise that resolves to an array of products.
+ * @return {Promise<Array<Object>>} - A promise that resolves to an array of items.
  */
-async function getProducts(database) {
+async function getItems(database) {
 	dbRef = ref(database);
 	try {
-		const snapshot = await get(child(dbRef, PRODUCTS_DB));
+		const snapshot = await get(child(dbRef, ITEMS_DB));
 		if (snapshot.exists()) {
 			return snapshot.val() || [];
 		}
 		return [];
 	} catch (error) {
-		console.error("Error fetching products:", error);
+		console.error("Error fetching items:", error);
 		return [];
 	}
 }
@@ -242,13 +242,13 @@ async function getForgottenChats(database) {
 }
 
 /**
- * Retrieves top K products based on the provided message and index.
+ * Retrieves top K items based on the provided message and index.
  *
- * @param {string} message - The message to retrieve products for.
- * @param {object} index - The index to use for querying products.
+ * @param {string} message - The message to retrieve items for.
+ * @param {object} index - The index to use for querying items.
  * @return {string} A JSON string representing the query response.
  */
-async function getKProducts(message, index) {
+async function getKItems(message, index) {
 	model = process.env.EMBEDDING_MODEL;
 	token = process.env.GEMINI_TOKEN;
 	proxy = process.env.PROXY_URL;
@@ -257,15 +257,15 @@ async function getKProducts(message, index) {
 	// Getting query.
 	const queryResponse = await index.namespace(VECTOR_DB_NAMESPACE).query({
 		vector: embedding,
-		topK: TOP_K_PRODUCTS,
+		topK: TOP_K_ITEMS,
 		includeMetadata: true,
 	});
 
-	products = [];
+	items = [];
 	for (i = 0; i < queryResponse.matches.length; i++) {
-		products.push(queryResponse.matches[i].metadata);
+		items.push(queryResponse.matches[i].metadata);
 	}
-	return products;
+	return items;
 }
 
 /**
@@ -277,7 +277,7 @@ async function getKProducts(message, index) {
 async function reminder(database) {
 	const users = await getForgottenChats(database);
 	const systemPrompt = await getSystemPrompt(database);
-	const products = await getProducts(database);
+	const items = await getItems(database);
 	for (const user in users) {
 		const messages = users[user].messages;
 		const reminderPrompt = await getReminderPrompt(database);
@@ -287,11 +287,13 @@ async function reminder(database) {
 			process.env.GEMINI_MODEL,
 			process.env.GEMINI_TOKEN,
 			process.env.PROXY_URL,
-			`${systemPrompt}\nProducts:\n${JSON.stringify(products)}`,
+			`${systemPrompt}\Items:\n${JSON.stringify(items)}`,
 		);
 		if (message === 1) {
-			console.error("Error generating reminder message. Proceeding with others");
-			continue; 
+			console.error(
+				"Error generating reminder message. Proceeding with others",
+			);
+			continue;
 		}
 		const userId = `${user}@c.us`;
 		const url = `https://1103.api.green-api.com/waInstance${process.env.ID_INSTANCE}/sendMessage/${process.env.API_TOKEN_INSTANCE}`;
@@ -303,7 +305,7 @@ async function reminder(database) {
 			"Content-Type": "application/json",
 		};
 		try {
-		await axios.post(url, payload, { headers: headers });
+			await axios.post(url, payload, { headers: headers });
 		} catch (error) {
 			console.error("Error sending reminder:", error);
 			continue;
@@ -329,7 +331,7 @@ module.exports = {
 	resetUser,
 	getMessages,
 	addMessage,
-	getProducts,
+	getItems,
 	getTriggers,
 	addTrigger,
 	getIntents,
@@ -337,6 +339,6 @@ module.exports = {
 	getClassifierPrompt,
 	getReminderPrompt,
 	getForgottenChats,
-	getKProducts,
+	getKItems,
 	reminder,
 };

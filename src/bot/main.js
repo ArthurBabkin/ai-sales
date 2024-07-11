@@ -12,12 +12,12 @@ const {
 	resetUser,
 	getMessages,
 	addMessage,
-	getProducts,
+	getItems,
 	addTrigger,
 	getIntents,
 	getSystemPrompt,
 	reminder,
-	getKProducts,
+	getKItems,
 	getClassifierPrompt,
 } = require("./database");
 const { squeezeMessages, checkTrigger } = require("./utils");
@@ -75,11 +75,11 @@ bot.on("message", async (ctx) => {
 	messages = await getMessages(database, userId);
 	messages = squeezeMessages(messages);
 	try {
-		const [systemPrompt, classifierPrompt, products, intents] =
+		const [systemPrompt, classifierPrompt, items, intents] =
 			await Promise.all([
 				getSystemPrompt(database),
 				getClassifierPrompt(database),
-				getKProducts(JSON.stringify(messages), index),
+				getKItems(JSON.stringify(messages), index),
 				getIntents(database),
 			]);
 
@@ -97,7 +97,7 @@ bot.on("message", async (ctx) => {
 				process.env.GEMINI_MODEL,
 				process.env.GEMINI_TOKEN,
 				process.env.PROXY_URL,
-				`${systemPrompt}\nProducts:\n${JSON.stringify(products)}`,
+				`${systemPrompt}\nItems:\n${JSON.stringify(items)}`,
 			),
 		]);
 
