@@ -73,7 +73,14 @@ async function getUserIntent(
 	token,
 	proxy,
 ) {
-	const message = `${prompt}\nIntents:\n${JSON.stringify(intents)}\nDialogue:\n${JSON.stringify(messages)}`;
+	classificationIntents = [];
+	for (i = 0; i < intents.length; i++) {
+		classificationIntents.push({
+			name: intents[i].name,
+			description: intents[i].description,
+		});
+	}
+	const message = `${prompt}\nIntents:\n${JSON.stringify(classificationIntents)}\nDialogue:\n${JSON.stringify(messages)}`;
 	result = await getGeminiResponse(
 		[{ role: "user", content: message }],
 		modelName,

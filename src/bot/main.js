@@ -12,12 +12,13 @@ const {
 	resetUser,
 	getMessages,
 	addMessage,
-	getProducts,
+	getItems,
 	addTrigger,
 	getIntents,
 	getSystemPrompt,
 	reminder,
-	getKProducts,
+	getKItems,
+	getClassifierPrompt,
 } = require("./database");
 const { squeezeMessages, checkTrigger } = require("./utils");
 const { Pinecone } = require("@pinecone-database/pinecone");
@@ -74,32 +75,42 @@ bot.on("message", async (ctx) => {
 	messages = await getMessages(database, userId);
 	messages = squeezeMessages(messages);
 	try {
-		const systemPrompt = await getSystemPrompt(database);
-		const products = await getKProducts(JSON.stringify(messages), index);
-		const intents = await getIntents(database);
-		const intent = await getUserIntent(
-			messages,
-			intents,
-			CLASSIFIER_MESSAGE,
-			process.env.GEMINI_MODEL,
-			process.env.GEMINI_TOKEN,
-			process.env.PROXY_URL,
-		);
+		const [systemPrompt, classifierPrompt, items, intents] =
+			await Promise.all([
+				getSystemPrompt(database),
+				getClassifierPrompt(database),
+				getKItems(JSON.stringify(messages), index),
+				getIntents(database),
+			]);
 
-		const message = await getGeminiResponse(
-			messages,
-			process.env.GEMINI_MODEL,
-			process.env.GEMINI_TOKEN,
-			process.env.PROXY_URL,
-			`${systemPrompt}\nProducts:\n${JSON.stringify(products)}`,
-		);
+		const [intent, message] = await Promise.all([
+			getUserIntent(
+				messages,
+				intents,
+				classifierPrompt,
+				process.env.GEMINI_MODEL,
+				process.env.GEMINI_TOKEN,
+				process.env.PROXY_URL,
+			),
+			getGeminiResponse(
+				messages,
+				process.env.GEMINI_MODEL,
+				process.env.GEMINI_TOKEN,
+				process.env.PROXY_URL,
+				`${systemPrompt}\nItems:\n${JSON.stringify(items)}`,
+			),
+		]);
 
-		const trigger = checkTrigger(message, intent, intents);
-		if (trigger != null) {
-			await addTrigger(database, userId, trigger);
-			await resetUser(database, userId);
-			await ctx.reply("TRIGGER ACTIVATED");
-			return;
+		try {
+			const trigger = checkTrigger(intent, intents);
+			if (trigger != null) {
+				await addTrigger(database, userId, trigger.name);
+				await resetUser(database, userId);
+				await ctx.reply(trigger.answer);
+				return;
+			}
+		} catch (error) {
+			console.log("Error checking trigger:", error);
 		}
 
 		await addMessage(database, userId, {
@@ -109,7 +120,7 @@ bot.on("message", async (ctx) => {
 
 		await ctx.reply(message);
 	} catch (error) {
-		console.error("Error getting response:", error);
+		console.error("Error building response:", error);
 
 		await addMessage(database, userId, {
 			role: "assistant",

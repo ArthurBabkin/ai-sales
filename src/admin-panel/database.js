@@ -2,47 +2,46 @@ const bcrypt = require("bcrypt");
 const { ref, update, get, child } = require("firebase/database");
 const { ADMINS_DB, SESSIONS_DB, SESSION_TIMEOUT } = require("./constants");
 const { getEmbedding } = require("../bot/api");
-const { getProducts, getIntents } = require("../bot/database");
+const { getItems, getIntents } = require("../bot/database");
 const {
-	PRODUCTS_DB,
+	ITEMS_DB,
 	INTENTS_DB,
 	SYSTEM_PROMPT_DB,
+	CLASSIFIER_PROMPT_DB,
+	REMINDER_PROMPT_DB,
 	VECTOR_DB_NAMESPACE,
 } = require("../bot/constants");
 
 /**
- * Adds a new product to the database.
+ * Adds a new item to the database.
  *
- * @param {string} name - The name of the product.
- * @param {string} description - The description of the product.
- * @param {number} price - The price of the product.
+ * @param {string} name - The name of the item.
+ * @param {string} description - The description of the item.
  * @param {object} database - The Firebase Realtime Database reference.
  * @param {object} [index=null] - The vector database index.
- * @return {Promise<number>} Returns 0 if the product was added successfully, or 1 if an error occurred.
+ * @return {Promise<number>} Returns 0 if the item was added successfully, or 1 if an error occurred.
  */
-async function addProduct(name, description, price, database, index = null) {
+async function addItem(name, description, database, index = null) {
 	dbRef = ref(database);
 	try {
-		products = await getProducts(database);
+		items = await getItems(database);
 		id = 0;
-		for (i = 0; i < products.length; i++) {
-			const product = products[i];
-			id = Math.max(id, product.id + 1);
+		for (i = 0; i < items.length; i++) {
+			const item = items[i];
+			id = Math.max(id, item.id + 1);
 		}
-		products.push({
+		items.push({
 			name: name,
 			description: description,
-			price: price,
 			id: id,
 		});
-		await update(dbRef, { [PRODUCTS_DB]: products });
+		await update(dbRef, { [ITEMS_DB]: items });
 		if (index !== null) {
-			await index.namespace(VECTOR_DB_NAMESPACE).deleteOne(String(id));
 			await index.namespace(VECTOR_DB_NAMESPACE).upsert([
 				{
 					id: String(id),
 					values: await getEmbedding(
-						JSON.stringify(products[i]),
+						JSON.stringify(items[i]),
 						process.env.EMBEDDING_MODEL,
 						process.env.GEMINI_TOKEN,
 						process.env.PROXY_URL,
@@ -51,61 +50,52 @@ async function addProduct(name, description, price, database, index = null) {
 						name: name,
 						description: description,
 						id: id,
-						price: price,
 					},
 				},
 			]);
 		}
 		return 0;
 	} catch (error) {
-		console.error("Error adding new product:", error);
+		console.error("Error adding new item:", error);
 		return 1;
 	}
 }
 
 /**
- * Updates a product in the database.
+ * Updates a item in the database.
  *
- * @param {string} name - The new name of the product.
- * @param {string} description - The new description of the product.
- * @param {number} price - The new price of the product.
- * @param {number} id - The ID of the product to be updated.
+ * @param {string} name - The new name of the item.
+ * @param {string} description - The new description of the item.
+ * @param {number} price - The new price of the item.
+ * @param {number} id - The ID of the item to be updated.
  * @param {object} database - The Firebase Realtime Database reference.
  * @param {object} [index=null] - The vector database index.
- * @return {Promise<number>} Returns 0 if the product was updated successfully, or 1 if an error occurred.
+ * @return {Promise<number>} Returns 0 if the item was updated successfully, or 1 if an error occurred.
  */
-async function updateProduct(
-	name,
-	description,
-	price,
-	id,
-	database,
-	index = null,
-) {
+async function updateItem(name, description, id, database, index = null) {
 	dbRef = ref(database);
 	try {
 		code = 1;
-		products = await getProducts(database);
-		updatedProduct = null;
-		for (i = 0; i < products.length; i++) {
-			if (products[i].id === id) {
-				products[i].name = name;
-				products[i].description = description;
-				products[i].price = price;
-				updatedProduct = products[i];
+		items = await getItems(database);
+		updatedItem = null;
+		for (i = 0; i < items.length; i++) {
+			if (items[i].id === id) {
+				items[i].name = name;
+				items[i].description = description;
+				updatedItem = items[i];
 				code = 0;
 				break;
 			}
 		}
-		await update(dbRef, { [PRODUCTS_DB]: products });
-		if (index != null && updateProduct != null) {
+		await update(dbRef, { [ITEMS_DB]: items });
+		if (index != null && updateItem != null) {
 			const vector = await getEmbedding(
-				JSON.stringify(updatedProduct),
+				JSON.stringify(updatedItem),
 				process.env.EMBEDDING_MODEL,
 				process.env.GEMINI_TOKEN,
 				process.env.PROXY_URL,
-			)
-			await index.namespace(VECTOR_DB_NAMESPACE).deleteOne(String(id));
+			);
+
 			await index.namespace(VECTOR_DB_NAMESPACE).upsert([
 				{
 					id: String(id),
@@ -114,59 +104,63 @@ async function updateProduct(
 						name: name,
 						description: description,
 						id: id,
-						price: price,
 					},
 				},
 			]);
 		}
 		return code;
 	} catch (error) {
-		console.error("Error updating product:", error);
+		console.error("Error updating item:", error);
 		return 1;
 	}
 }
 
 /**
- * Deletes a product from the database based on the provided ID.
+ * Deletes an item from the database based on the provided ID.
  *
- * @param {number} id - The ID of the product to be deleted.
+ * @param {number} id - The ID of the item to be deleted.
  * @param {object} database - The Firebase Realtime Database reference.
  * @param {object} [index=null] - The vector database index.
- * @return {Promise<number>} Returns 0 if the product was deleted successfully, or 1 if an error occurred.
+ * @return {Promise<number>} Returns 0 if the item was deleted successfully, or 1 if an error occurred.
  */
-async function deleteProduct(id, database, index = null) {
+async function deleteItem(id, database, index = null) {
 	dbRef = ref(database);
 	try {
 		code = 1;
-		products = await getProducts(database);
-		newProducts = [];
-		for (i = 0; i < products.length; i++) {
-			if (products[i].id === id) {
+		items = await getItems(database);
+		newItems = [];
+		for (i = 0; i < items.length; i++) {
+			if (items[i].id === id) {
 				code = 0;
 				continue;
 			}
-			newProducts.push(products[i]);
+			newItems.push(items[i]);
 		}
-		await update(dbRef, { [PRODUCTS_DB]: newProducts });
+		await update(dbRef, { [ITEMS_DB]: newItems });
 		if (index != null) {
-			await index.namespace(VECTOR_DB_NAMESPACE).deleteOne(String(id));
+			try {
+				await index.namespace(VECTOR_DB_NAMESPACE).deleteOne(String(id));
+			} catch (error) {
+				console.error("Error deleting item from vector database:", error);
+			}
 		}
 		return code;
 	} catch (error) {
-		console.error("Error deleting product:", error);
+		console.error("Error deleting item:", error);
 		return 1;
 	}
 }
 
 /**
- * Adds an intent to the database with the given name and description.
+ * Adds a new intent to the database with the provided name, description, and answer.
  *
- * @param {string} name - The name of the intent.
- * @param {string} description - The description of the intent.
+ * @param {string} name - The name of the intent to add.
+ * @param {string} description - The description of the intent to add.
+ * @param {string} answer - The answer associated with the intent.
  * @param {object} database - The Firebase Realtime Database reference.
- * @return {Promise<number>} Returns 0 if the intent was added successfully, or 1 if an error occurred.
+ * @return {number} Returns 0 if the intent was added successfully, or 1 if an error occurred.
  */
-async function addIntent(name, description, database) {
+async function addIntent(name, description, answer, database) {
 	dbRef = ref(database);
 	try {
 		const snapshot = await get(child(dbRef, INTENTS_DB));
@@ -177,7 +171,12 @@ async function addIntent(name, description, database) {
 			const intent = intents[i];
 			newId = Math.max(newId, intent.id + 1);
 		}
-		intents.push({ name: name, description: description, id: newId });
+		intents.push({
+			name: name,
+			description: description,
+			answer: answer,
+			id: newId,
+		});
 		await update(dbRef, { [INTENTS_DB]: intents });
 		return 0;
 	} catch (error) {
@@ -187,15 +186,16 @@ async function addIntent(name, description, database) {
 }
 
 /**
- * Updates an intent in the database with the given name, description, and id.
+ * Update an intent with the provided name, description, and answer based on the given ID.
  *
- * @param {string} name - The new name of the intent.
- * @param {string} description - The new description of the intent.
- * @param {number} id - The id of the intent to update.
+ * @param {string} name - The new name for the intent.
+ * @param {string} description - The new description for the intent.
+ * @param {string} answer - The new answer for the intent.
+ * @param {number} id - The ID of the intent to update.
  * @param {object} database - The Firebase Realtime Database reference.
- * @return {Promise<number>} Returns 0 if the intent was updated successfully, or 1 if an error occurred.
+ * @return {number} Returns 0 if the intent was updated successfully, or 1 if an error occurred.
  */
-async function updateIntent(name, description, id, database) {
+async function updateIntent(name, description, answer, id, database) {
 	dbRef = ref(database);
 	try {
 		code = 1;
@@ -204,6 +204,7 @@ async function updateIntent(name, description, id, database) {
 			if (intents[i].id === id) {
 				intents[i].name = name;
 				intents[i].description = description;
+				intents[i].answer = answer;
 				code = 0;
 			}
 		}
@@ -422,6 +423,28 @@ async function updateSystemPrompt(prompt, database) {
 	}
 }
 
+async function updateClassifierPrompt(prompt, database) {
+	dbRef = ref(database);
+	try {
+		await update(dbRef, { [CLASSIFIER_PROMPT_DB]: prompt });
+		return 0;
+	} catch (error) {
+		console.error("Error updating classifier prompt:", error);
+		return 1;
+	}
+}
+
+async function updateReminderPrompt(prompt, database) {
+	dbRef = ref(database);
+	try {
+		await update(dbRef, { [REMINDER_PROMPT_DB]: prompt });
+		return 0;
+	} catch (error) {
+		console.error("Error updating reminder prompt:", error);
+		return 1;
+	}
+}
+
 /**
  * Checks the authentication status of a request.
  *
@@ -437,37 +460,37 @@ async function checkReqAuth(req, database) {
 }
 
 /**
- * Updates the vector database by deleting all existing vectors and re-inserting new vectors based on the products in the database.
+ * Updates the vector database by deleting all existing vectors and re-inserting new vectors based on the items in the database.
  *
  * @param {Object} database - The database object.
  * @param {Object} index - The index object.
  * @return {Promise<void>} A Promise that resolves when the vector database is updated.
  */
 async function updateVectorDatabase(database, index) {
-	const products = await getProducts(database);
+	const items = await getItems(database);
 	try {
 		index.namespace(VECTOR_DB_NAMESPACE).deleteAll();
 	} catch (error) {
 		console.error("Error deleting vector database:", error);
 	}
 
-	for (i = 0; i < products.length; i++) {
-		const product = products[i];
+	for (i = 0; i < items.length; i++) {
+		const item = items[i];
 		const vector = await getEmbedding(
-			JSON.stringify(product),
+			JSON.stringify(item),
 			process.env.EMBEDDING_MODEL,
 			process.env.GEMINI_TOKEN,
 			process.env.PROXY_URL,
 		);
 		index
 			.namespace(VECTOR_DB_NAMESPACE)
-			.upsert([{ id: String(product.id), values: vector, metadata: product }]);
+			.upsert([{ id: String(item.id), values: vector, metadata: item }]);
 	}
 }
 module.exports = {
-	addProduct,
-	updateProduct,
-	deleteProduct,
+	addItem,
+	updateItem,
+	deleteItem,
 	addIntent,
 	updateIntent,
 	deleteIntent,
@@ -478,6 +501,8 @@ module.exports = {
 	checkSession,
 	generateRandomId,
 	updateSystemPrompt,
+	updateClassifierPrompt,
+	updateReminderPrompt,
 	checkReqAuth,
 	updateVectorDatabase,
 };

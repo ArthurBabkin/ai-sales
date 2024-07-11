@@ -1,34 +1,31 @@
 const { checkTrigger, squeezeMessages } = require("../utils");
 
 test("checkTrigger", () => {
-	const messageResponse = "Thank you for your purchase";
 	const intentResponse = "purchase";
 	const intents = [
 		{
 			name: "purchase",
 		},
 	];
-	expect(checkTrigger(messageResponse, intentResponse, intents)).toBe(
+	expect(checkTrigger(intentResponse, intents).name).toBe(
 		"purchase",
 	);
 
-	const messageResponse2 = "Thank you";
 	const intentResponse2 = "purchase";
 	const intents2 = [
 		{
 			name: "manager",
 		},
 	];
-	expect(checkTrigger(messageResponse2, intentResponse2, intents2)).toBe(null);
+	expect(checkTrigger(intentResponse2, intents2)).toBe(null);
 
-	const messageResponse3 = "Hello";
 	const intentResponse3 = "manager";
 	const intents3 = [
 		{
 			name: "manager",
 		},
 	];
-	expect(checkTrigger(messageResponse3, intentResponse3, intents3)).toBe(
+	expect(checkTrigger(intentResponse3, intents3).name).toBe(
 		"manager",
 	);
 });

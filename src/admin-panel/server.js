@@ -6,9 +6,9 @@ const { initializeApp } = require("firebase/app");
 const { getDatabase } = require("firebase/database");
 const { Pinecone } = require("@pinecone-database/pinecone");
 const {
-	addProduct,
-	updateProduct,
-	deleteProduct,
+	addItem,
+	updateItem,
+	deleteItem,
 	addIntent,
 	updateIntent,
 	deleteIntent,
@@ -17,11 +17,19 @@ const {
 	extendSession,
 	generateRandomId,
 	updateSystemPrompt,
+	updateClassifierPrompt,
+	updateReminderPrompt,
 	checkReqAuth,
 	updateVectorDatabase,
 } = require("./database");
 const { SESSION_TIMEOUT } = require("./constants");
-const { getProducts, getIntents, getSystemPrompt } = require("../bot/database");
+const {
+	getItems,
+	getIntents,
+	getSystemPrompt,
+	getClassifierPrompt,
+	getReminderPrompt,
+} = require("../bot/database");
 const { INDEX_NAME } = require("../bot/constants");
 
 const pc = new Pinecone({
@@ -60,11 +68,11 @@ app.get("/", async (req, res) => {
 	}
 });
 
-app.get("/products", async (req, res) => {
+app.get("/items", async (req, res) => {
 	const auth = await checkReqAuth(req, database);
 	if (auth) {
 		await extendSession(req.cookies.username, req.cookies.sessionId, database);
-		res.sendFile(path.join(__dirname, "public", "products.html"));
+		res.sendFile(path.join(__dirname, "public", "items.html"));
 	} else {
 		res.redirect("/auth");
 	}
@@ -80,11 +88,11 @@ app.get("/intents", async (req, res) => {
 	}
 });
 
-app.get("/system-prompt", async (req, res) => {
+app.get("/system-prompts", async (req, res) => {
 	const auth = await checkReqAuth(req, database);
 	if (auth) {
 		await extendSession(req.cookies.username, req.cookies.sessionId, database);
-		res.sendFile(path.join(__dirname, "public", "system-prompt.html"));
+		res.sendFile(path.join(__dirname, "public", "system-prompts.html"));
 	} else {
 		res.redirect("/auth");
 	}
@@ -114,18 +122,12 @@ app.post("/login", async (req, res) => {
 	}
 });
 
-app.post("/submit-product", async (req, res) => {
-	const { productName, productDescription, productPrice } = req.body;
+app.post("/submit-item", async (req, res) => {
+	const { itemName, itemDescription } = req.body;
 	const auth = await checkReqAuth(req, database);
 	if (auth) {
 		await extendSession(req.cookies.username, req.cookies.sessionId, database);
-		const code = await addProduct(
-			productName,
-			productDescription,
-			Number.parseFloat(productPrice),
-			database,
-			index,
-		);
+		const code = await addItem(itemName, itemDescription, database, index);
 		if (code === 0) {
 			res.json({ success: true });
 		} else {
@@ -136,15 +138,14 @@ app.post("/submit-product", async (req, res) => {
 	}
 });
 
-app.post("/update-product", async (req, res) => {
-	const { name, description, price, id } = req.body;
+app.post("/update-item", async (req, res) => {
+	const { name, description, id } = req.body;
 	const auth = await checkReqAuth(req, database);
 	if (auth) {
 		await extendSession(req.cookies.username, req.cookies.sessionId, database);
-		const code = await updateProduct(
+		const code = await updateItem(
 			name,
 			description,
-			Number.parseFloat(price),
 			Number.parseInt(id),
 			database,
 			index,
@@ -159,12 +160,12 @@ app.post("/update-product", async (req, res) => {
 	}
 });
 
-app.post("/delete-product", async (req, res) => {
+app.post("/delete-item", async (req, res) => {
 	const { id } = req.body;
 	const auth = await checkReqAuth(req, database);
 	if (auth) {
 		await extendSession(req.cookies.username, req.cookies.sessionId, database);
-		const code = await deleteProduct(Number.parseInt(id), database, index);
+		const code = await deleteItem(Number.parseInt(id), database, index);
 		if (code === 0) {
 			res.json({ success: true });
 		} else {
@@ -175,22 +176,27 @@ app.post("/delete-product", async (req, res) => {
 	}
 });
 
-app.get("/list-products", async (req, res) => {
+app.get("/list-items", async (req, res) => {
 	const auth = await checkReqAuth(req, database);
 	if (auth) {
-		const products = await getProducts(database);
-		res.json({ products: products });
+		const items = await getItems(database);
+		res.json({ items: items });
 	} else {
-		res.json({ products: [] });
+		res.json({ items: [] });
 	}
 });
 
 app.post("/submit-intent", async (req, res) => {
-	const { intentName, intentDescription } = req.body;
+	const { intentName, intentDescription, intentAnswer } = req.body;
 	const auth = await checkReqAuth(req, database);
 	if (auth) {
 		await extendSession(req.cookies.username, req.cookies.sessionId, database);
-		const code = await addIntent(intentName, intentDescription, database);
+		const code = await addIntent(
+			intentName,
+			intentDescription,
+			intentAnswer,
+			database,
+		);
 		if (code === 0) {
 			res.json({ success: true });
 		} else {
@@ -202,13 +208,14 @@ app.post("/submit-intent", async (req, res) => {
 });
 
 app.post("/update-intent", async (req, res) => {
-	const { intentName, intentDescription, intentId } = req.body;
+	const { intentName, intentDescription, intentAnswer, intentId } = req.body;
 	const auth = await checkReqAuth(req, database);
 	if (auth) {
 		await extendSession(req.cookies.username, req.cookies.sessionId, database);
 		const code = await updateIntent(
 			intentName,
 			intentDescription,
+			intentAnswer,
 			Number.parseInt(intentId),
 			database,
 		);
@@ -258,6 +265,26 @@ app.get("/get-system-prompt", async (req, res) => {
 	}
 });
 
+app.get("/get-classifier-prompt", async (req, res) => {
+	const auth = await checkReqAuth(req, database);
+	if (auth) {
+		const prompt = await getClassifierPrompt(database);
+		res.json({ prompt: prompt });
+	} else {
+		res.json({ prompt: "" });
+	}
+});
+
+app.get("/get-reminder-prompt", async (req, res) => {
+	const auth = await checkReqAuth(req, database);
+	if (auth) {
+		const prompt = await getReminderPrompt(database);
+		res.json({ prompt: prompt });
+	} else {
+		res.json({ prompt: "" });
+	}
+});
+
 app.post("/update-system-prompt", async (req, res) => {
 	const { prompt } = req.body;
 	const auth = await checkReqAuth(req, database);
@@ -274,7 +301,40 @@ app.post("/update-system-prompt", async (req, res) => {
 	}
 });
 
+app.post("/update-classifier-prompt", async (req, res) => {
+	const { prompt } = req.body;
+	const auth = await checkReqAuth(req, database);
+	if (auth) {
+		await extendSession(req.cookies.username, req.cookies.sessionId, database);
+		const code = await updateClassifierPrompt(prompt, database);
+		if (code === 0) {
+			res.json({ success: true });
+		} else {
+			res.json({ success: false });
+		}
+	} else {
+		res.json({ success: false });
+	}
+});
+
+app.post("/update-reminder-prompt", async (req, res) => {
+	const { prompt } = req.body;
+	const auth = await checkReqAuth(req, database);
+	if (auth) {
+		await extendSession(req.cookies.username, req.cookies.sessionId, database);
+		const code = await updateReminderPrompt(prompt, database);
+		if (code === 0) {
+			res.json({ success: true });
+		} else {
+			res.json({ success: false });
+		}
+	} else {
+		res.json({ success: false });
+	}
+});
+
+setInterval(() => updateVectorDatabase(database, index), 20 * 60 * 1000);
+
 app.listen(port, () => {
-	updateVectorDatabase(database, index);
 	console.log(`Server is running on http://localhost:${port}`);
 });

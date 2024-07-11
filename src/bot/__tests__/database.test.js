@@ -11,7 +11,7 @@ const {
 	addMessage,
 	getMessages,
 	resetUser,
-	getProducts,
+	getItems,
 	getIntents,
 	getTriggers,
 	addTrigger,
@@ -33,7 +33,7 @@ const { FORGOTTEN_CHAT_LIMIT } = require("../constants");
 const { or } = require("firebase/firestore");
 
 const CHATS_DB = "chatsTest/";
-const PRODUCTS_DB = "productsTest/";
+const ITEMS_DB = "itemsTest/";
 const INTENTS_DB = "intentsTest/";
 const TRIGGERS_DB = "triggersTest/";
 const SYSTEM_PROMPT_DB = "systemPromptTest/";
@@ -43,7 +43,7 @@ jest.mock("../constants", () => {
 	return {
 		...originalModule,
 		CHATS_DB: CHATS_DB,
-		PRODUCTS_DB: PRODUCTS_DB,
+		ITEMS_DB: ITEMS_DB,
 		INTENTS_DB: INTENTS_DB,
 		TRIGGERS_DB: TRIGGERS_DB,
 		SYSTEM_PROMPT_DB: SYSTEM_PROMPT_DB,
@@ -72,24 +72,22 @@ test("addMessage + getMessages + resetUser", async () => {
 	expect(retrievedMessage2).toEqual([]);
 });
 
-test("getProducts", async () => {
-	await set(child(ref(db), PRODUCTS_DB), []);
-	const products = await getProducts(db);
-	expect(products).toEqual([]);
+test("getItems", async () => {
+	await set(child(ref(db), ITEMS_DB), []);
+	const items = await getItems(db);
+	expect(items).toEqual([]);
 
-	await set(child(ref(db), `${PRODUCTS_DB}/0`), {
-		name: "Product 1",
+	await set(child(ref(db), `${ITEMS_DB}/0`), {
+		name: "Item 1",
 		description: "Description 1",
-		price: 10,
 		id: 0,
 	});
 
-	const products2 = await getProducts(db);
-	expect(products2).toEqual([
+	const items2 = await getItems(db);
+	expect(items2).toEqual([
 		{
-			name: "Product 1",
+			name: "Item 1",
 			description: "Description 1",
-			price: 10,
 			id: 0,
 		},
 	]);
@@ -169,7 +167,7 @@ test("addMessage + getForgottenChats", async () => {
 afterAll(() => {
 	for (const dbKey of [
 		CHATS_DB,
-		PRODUCTS_DB,
+		ITEMS_DB,
 		INTENTS_DB,
 		TRIGGERS_DB,
 		SYSTEM_PROMPT_DB,
