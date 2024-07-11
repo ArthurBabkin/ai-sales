@@ -9,8 +9,8 @@ const {
 	SYSTEM_PROMPT_DB,
 	CLASSIFIER_PROMPT_DB,
 	REMINDER_PROMPT_DB,
+	SETTINGS_DB,
 	REMINDER_LIMIT,
-	REMINDER_MESSAGE,
 	VECTOR_DB_NAMESPACE,
 } = require("./constants");
 const { getUserId } = require("./utils");
@@ -178,6 +178,12 @@ async function getSystemPrompt(database) {
 	}
 }
 
+/**
+ * Retrieves the classifier prompt from the given Firebase Realtime Database instance.
+ *
+ * @param {Object} database - The Firebase Realtime Database instance.
+ * @return {Promise<string>} A promise that resolves to the classifier prompt value.
+ */
 async function getClassifierPrompt(database) {
 	dbRef = ref(database);
 	try {
@@ -192,6 +198,12 @@ async function getClassifierPrompt(database) {
 	}
 }
 
+/**
+ * Retrieves the reminder prompt from the given Firebase Realtime Database instance.
+ *
+ * @param {Object} database - The Firebase Realtime Database instance.
+ * @return {Promise<string>} A promise that resolves to the reminder prompt, or an empty string if it does not exist.
+ */
 async function getReminderPrompt(database) {
 	dbRef = ref(database);
 	try {
@@ -203,6 +215,27 @@ async function getReminderPrompt(database) {
 	} catch (error) {
 		console.error("Error fetching reminder prompt:", error);
 		return "";
+	}
+}
+
+/**
+ * Retrieves the settings from the given Firebase Realtime Database instance.
+ *
+ * @param {Object} database - The Firebase Realtime Database instance.
+ * @return {Promise<Object>} A promise that resolves to an object containing the settings.
+ * If the settings do not exist, an empty object is returned.
+ */
+async function getSettings(database) {
+	dbRef = ref(database);
+	try {
+		const snapshot = await get(child(dbRef, SETTINGS_DB));
+		if (snapshot.exists()) {
+			return snapshot.val();
+		}
+		return {};
+	} catch (error) {
+		console.error("Error fetching settings:", error);
+		return {};
 	}
 }
 
@@ -338,6 +371,7 @@ module.exports = {
 	getSystemPrompt,
 	getClassifierPrompt,
 	getReminderPrompt,
+	getSettings,
 	getForgottenChats,
 	getKItems,
 	reminder,

@@ -5,14 +5,12 @@ const { getGeminiResponse, getUserIntent } = require("./api");
 const {
 	HELP_MESSAGE,
 	RESET_MESSAGE,
-	CLASSIFIER_MESSAGE,
 	INDEX_NAME,
 } = require("./constants");
 const {
 	resetUser,
 	getMessages,
 	addMessage,
-	getItems,
 	addTrigger,
 	getIntents,
 	getSystemPrompt,

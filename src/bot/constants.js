@@ -13,6 +13,7 @@ const INTENTS_DB = "intents/";
 const SYSTEM_PROMPT_DB = "systemPrompt/";
 const CLASSIFIER_PROMPT_DB = "classifierPrompt/";
 const REMINDER_PROMPT_DB = "reminderPrompt/";
+const SETTINGS_DB = "settings/";
 
 
 const INDEX_NAME = "ai-sales";
@@ -30,6 +31,7 @@ module.exports = {
 	SYSTEM_PROMPT_DB,
 	CLASSIFIER_PROMPT_DB,
 	REMINDER_PROMPT_DB,
+	SETTINGS_DB,
 	INDEX_NAME,
 	VECTOR_DB_NAMESPACE,
 };

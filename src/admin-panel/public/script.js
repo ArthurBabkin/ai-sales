@@ -2,10 +2,12 @@ document.addEventListener("DOMContentLoaded", () => {
 	const itemsBtn = document.getElementById("itemsBtn");
 	const intentsBtn = document.getElementById("intentsBtn");
 	const systemPromptBtn = document.getElementById("systemPromptBtn");
+	const settingsBtn = document.getElementById("settingsBtn");
 	const adminPanelBtn = document.getElementById("adminPanelBtn");
 	const loginForm = document.getElementById("loginForm");
 	const itemList = document.getElementById("itemList");
 	const intentList = document.getElementById("intentList");
+	const settings = document.getElementById("settings");
 	const systemPrompt = document.getElementById("systemPrompt");
 	const classifierPrompt = document.getElementById("classifierPrompt");
 	const reminderPrompt = document.getElementById("reminderPrompt");
@@ -28,6 +30,13 @@ document.addEventListener("DOMContentLoaded", () => {
 		systemPromptBtn.addEventListener("click", (event) => {
 			event.preventDefault();
 			window.location.href = "/system-prompts";
+		});
+	}
+
+	if (settingsBtn) {
+		settingsBtn.addEventListener("click", (event) => {
+			event.preventDefault();
+			window.location.href = "/settings";
 		});
 	}
 
@@ -659,6 +668,131 @@ document.addEventListener("DOMContentLoaded", () => {
 								window.location.reload();
 							} else {
 								alert("Reminder prompt update failed");
+							}
+						})
+						.catch((error) => {
+							alert("An error occurred. Please try again later.");
+						});
+				});
+			});
+	}
+
+	if (settings) {
+		fetch("/list-settings")
+			.then((response) => response.json())
+			.then((data) => {
+				const dataSettings = data.settings;
+				const form = document.createElement("form");
+				form.className = "form";
+
+				const reminderActivationTimeLabel = document.createElement("label");
+				reminderActivationTimeLabel.textContent =
+					"Reminder Activation Time (in minutes, leave empty to disable):";
+				const reminderActivationTimeInput = document.createElement("input");
+				reminderActivationTimeInput.name = "reminderActivationTime";
+				reminderActivationTimeInput.type = "number";
+				reminderActivationTimeInput.value = dataSettings.reminderActivationTime;
+				reminderActivationTimeInput.min = 1;
+				reminderActivationTimeInput.step = 1;
+
+				const startMessageLabel = document.createElement("label");
+				startMessageLabel.textContent = "/start Message:";
+				const startMessageInput = document.createElement("textarea");
+				startMessageInput.name = "startMessage";
+				startMessageInput.rows = 10;
+				startMessageInput.cols = 50;
+				startMessageInput.value = dataSettings.startMessage;
+
+				const helpMessageLabel = document.createElement("label");
+				helpMessageLabel.textContent = "/help Message:";
+				const helpMessageInput = document.createElement("textarea");
+				helpMessageInput.name = "helpMessage";
+				helpMessageInput.rows = 10;
+				helpMessageInput.cols = 50;
+				helpMessageInput.value = dataSettings.helpMessage;
+
+				const resetMessageLabel = document.createElement("label");
+				resetMessageLabel.textContent = "/reset Message:";
+				const resetMessageInput = document.createElement("textarea");
+				resetMessageInput.name = "resetMessage";
+				resetMessageInput.rows = 10;
+				resetMessageInput.cols = 50;
+				resetMessageInput.value = dataSettings.resetMessage;
+
+				const topKItemsLabel = document.createElement("label");
+				topKItemsLabel.textContent = "Vector DB Top K Items:";
+				const topKItemsInput = document.createElement("input");
+				topKItemsInput.name = "topKItems";
+				topKItemsInput.type = "number";
+				topKItemsInput.value = dataSettings.topKItems;
+				topKItemsInput.min = 1;
+				topKItemsInput.step = 1;
+
+				const threshold = document.createElement("label");
+				threshold.textContent = "Vector DB Threshold:";
+				const thresholdInput = document.createElement("input");
+				thresholdInput.name = "threshold";
+				thresholdInput.type = "number";
+				thresholdInput.value = dataSettings.threshold;
+				thresholdInput.min = 0;
+				thresholdInput.max = 1;
+				thresholdInput.step = 0.0001;
+
+				const updateBtn = document.createElement("input");
+				updateBtn.type = "submit";
+				updateBtn.value = "Update Settings";
+				updateBtn.className = "button";
+
+				form.appendChild(reminderActivationTimeLabel);
+				form.appendChild(document.createElement("br"));
+				form.appendChild(reminderActivationTimeInput);
+				form.appendChild(document.createElement("br"));
+				form.appendChild(startMessageLabel);
+				form.appendChild(document.createElement("br"));
+				form.appendChild(startMessageInput);
+				form.appendChild(document.createElement("br"));
+				form.appendChild(helpMessageLabel);
+				form.appendChild(document.createElement("br"));
+				form.appendChild(helpMessageInput);
+				form.appendChild(document.createElement("br"));
+				form.appendChild(resetMessageLabel);
+				form.appendChild(document.createElement("br"));
+				form.appendChild(resetMessageInput);
+				form.appendChild(document.createElement("br"));
+				form.appendChild(topKItemsLabel);
+				form.appendChild(document.createElement("br"));
+				form.appendChild(topKItemsInput);
+				form.appendChild(document.createElement("br"));
+				form.appendChild(threshold);
+				form.appendChild(document.createElement("br"));
+				form.appendChild(thresholdInput);
+				form.appendChild(document.createElement("br"));
+				form.appendChild(updateBtn);
+
+				settings.appendChild(form);
+
+				form.addEventListener("submit", (event) => {
+					event.preventDefault();
+					const formData = new FormData(form);
+					const formObject = {};
+					formData.forEach((value, key) => {
+						formObject[key] = value;
+					});
+
+					fetch("/update-settings", {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify(formObject),
+					})
+						.then((response) => response.json())
+						.then((data) => {
+							if (data.success) {
+								alert("Settings updated successfully");
+								window.location.reload();
+							} else {
+								alert("Settings update failed");
 							}
 						})
 						.catch((error) => {
