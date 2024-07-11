@@ -101,6 +101,8 @@ bot.on("message", async (ctx) => {
 			content: message,
 		});
 
+		await sleep(2000);
+
 		await ctx.reply(message);
 	} catch (error) {
 		console.error("Error getting response:", error);
