@@ -685,6 +685,16 @@ document.addEventListener("DOMContentLoaded", () => {
 				const form = document.createElement("form");
 				form.className = "form";
 
+				const responseDelayLabel = document.createElement("label");
+				responseDelayLabel.textContent =
+					"Response Delay (in seconds, empty to disable):";
+				const responseDelayInput = document.createElement("input");
+				responseDelayInput.name = "responseDelay";
+				responseDelayInput.type = "number";
+				responseDelayInput.value = dataSettings.responseDelay;
+				responseDelayInput.min = 0;
+				responseDelayInput.step = 0.001;
+
 				const reminderActivationTimeLabel = document.createElement("label");
 				reminderActivationTimeLabel.textContent =
 					"Reminder Activation Time (in minutes, leave empty to disable):";
@@ -743,6 +753,10 @@ document.addEventListener("DOMContentLoaded", () => {
 				updateBtn.value = "Update Settings";
 				updateBtn.className = "button";
 
+				form.appendChild(responseDelayLabel);
+				form.appendChild(document.createElement("br"));
+				form.appendChild(responseDelayInput);
+				form.appendChild(document.createElement("br"));
 				form.appendChild(reminderActivationTimeLabel);
 				form.appendChild(document.createElement("br"));
 				form.appendChild(reminderActivationTimeInput);

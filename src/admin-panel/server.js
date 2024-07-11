@@ -269,6 +269,7 @@ app.get("/list-intents", async (req, res) => {
 
 app.post("/update-settings", async (req, res) => {
 	const {
+		responseDelay,
 		reminderActivationTime,
 		startMessage,
 		helpMessage,
@@ -279,6 +280,7 @@ app.post("/update-settings", async (req, res) => {
 	const auth = await checkReqAuth(req, database);
 	if (auth) {
 		const code = await updateSettings(
+			responseDelay,
 			reminderActivationTime,
 			startMessage,
 			helpMessage,

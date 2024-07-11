@@ -473,6 +473,7 @@ async function updateReminderPrompt(prompt, database) {
  * @return {Promise<number>} A Promise that resolves to 0 if the settings were successfully updated, or 1 if an error occurred.
  */
 async function updateSettings(
+	responseDelay,
 	reminderActivationTime,
 	startMessage,
 	helpMessage,
@@ -484,6 +485,7 @@ async function updateSettings(
 	dbRef = ref(database);
 	try {
 		await update(child(dbRef, SETTINGS_DB), {
+			responseDelay: responseDelay,
 			reminderActivationTime: reminderActivationTime,
 			startMessage: startMessage,
 			helpMessage: helpMessage,
