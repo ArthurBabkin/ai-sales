@@ -152,14 +152,15 @@ async function deleteItem(id, database, index = null) {
 }
 
 /**
- * Adds an intent to the database with the given name and description.
+ * Adds a new intent to the database with the provided name, description, and answer.
  *
- * @param {string} name - The name of the intent.
- * @param {string} description - The description of the intent.
+ * @param {string} name - The name of the intent to add.
+ * @param {string} description - The description of the intent to add.
+ * @param {string} answer - The answer associated with the intent.
  * @param {object} database - The Firebase Realtime Database reference.
- * @return {Promise<number>} Returns 0 if the intent was added successfully, or 1 if an error occurred.
+ * @return {number} Returns 0 if the intent was added successfully, or 1 if an error occurred.
  */
-async function addIntent(name, description, database) {
+async function addIntent(name, description, answer, database) {
 	dbRef = ref(database);
 	try {
 		const snapshot = await get(child(dbRef, INTENTS_DB));
@@ -170,7 +171,12 @@ async function addIntent(name, description, database) {
 			const intent = intents[i];
 			newId = Math.max(newId, intent.id + 1);
 		}
-		intents.push({ name: name, description: description, id: newId });
+		intents.push({
+			name: name,
+			description: description,
+			answer: answer,
+			id: newId,
+		});
 		await update(dbRef, { [INTENTS_DB]: intents });
 		return 0;
 	} catch (error) {
@@ -180,15 +186,16 @@ async function addIntent(name, description, database) {
 }
 
 /**
- * Updates an intent in the database with the given name, description, and id.
+ * Update an intent with the provided name, description, and answer based on the given ID.
  *
- * @param {string} name - The new name of the intent.
- * @param {string} description - The new description of the intent.
- * @param {number} id - The id of the intent to update.
+ * @param {string} name - The new name for the intent.
+ * @param {string} description - The new description for the intent.
+ * @param {string} answer - The new answer for the intent.
+ * @param {number} id - The ID of the intent to update.
  * @param {object} database - The Firebase Realtime Database reference.
- * @return {Promise<number>} Returns 0 if the intent was updated successfully, or 1 if an error occurred.
+ * @return {number} Returns 0 if the intent was updated successfully, or 1 if an error occurred.
  */
-async function updateIntent(name, description, id, database) {
+async function updateIntent(name, description, answer, id, database) {
 	dbRef = ref(database);
 	try {
 		code = 1;
@@ -197,6 +204,7 @@ async function updateIntent(name, description, id, database) {
 			if (intents[i].id === id) {
 				intents[i].name = name;
 				intents[i].description = description;
+				intents[i].answer = answer;
 				code = 0;
 			}
 		}

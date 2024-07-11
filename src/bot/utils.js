@@ -35,7 +35,7 @@ function checkTrigger(intentResponse, intents) {
 	for (let i = 0; i < intents.length; i++) {
 		const intent = intents[i];
 		if (intentResponse.toLowerCase().includes(intent.name.toLowerCase())) {
-			foundIntent = intent.name;
+			foundIntent = intent;
 			break;
 		}
 	}

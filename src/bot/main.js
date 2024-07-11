@@ -104,9 +104,9 @@ bot.on("message", async (ctx) => {
 		try {
 			const trigger = checkTrigger(intent, intents);
 			if (trigger != null) {
-				await addTrigger(database, userId, trigger);
+				await addTrigger(database, userId, trigger.name);
 				await resetUser(database, userId);
-				await ctx.reply("TRIGGER ACTIVATED");
+				await ctx.reply(trigger.answer);
 				return;
 			}
 		} catch (error) {

@@ -7,7 +7,7 @@ test("checkTrigger", () => {
 			name: "purchase",
 		},
 	];
-	expect(checkTrigger(intentResponse, intents)).toBe(
+	expect(checkTrigger(intentResponse, intents).name).toBe(
 		"purchase",
 	);
 
@@ -25,7 +25,7 @@ test("checkTrigger", () => {
 			name: "manager",
 		},
 	];
-	expect(checkTrigger(intentResponse3, intents3)).toBe(
+	expect(checkTrigger(intentResponse3, intents3).name).toBe(
 		"manager",
 	);
 });

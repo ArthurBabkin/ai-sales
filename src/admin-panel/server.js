@@ -127,12 +127,7 @@ app.post("/submit-item", async (req, res) => {
 	const auth = await checkReqAuth(req, database);
 	if (auth) {
 		await extendSession(req.cookies.username, req.cookies.sessionId, database);
-		const code = await addItem(
-			itemName,
-			itemDescription,
-			database,
-			index,
-		);
+		const code = await addItem(itemName, itemDescription, database, index);
 		if (code === 0) {
 			res.json({ success: true });
 		} else {
@@ -192,11 +187,16 @@ app.get("/list-items", async (req, res) => {
 });
 
 app.post("/submit-intent", async (req, res) => {
-	const { intentName, intentDescription } = req.body;
+	const { intentName, intentDescription, intentAnswer } = req.body;
 	const auth = await checkReqAuth(req, database);
 	if (auth) {
 		await extendSession(req.cookies.username, req.cookies.sessionId, database);
-		const code = await addIntent(intentName, intentDescription, database);
+		const code = await addIntent(
+			intentName,
+			intentDescription,
+			intentAnswer,
+			database,
+		);
 		if (code === 0) {
 			res.json({ success: true });
 		} else {
@@ -208,13 +208,14 @@ app.post("/submit-intent", async (req, res) => {
 });
 
 app.post("/update-intent", async (req, res) => {
-	const { intentName, intentDescription, intentId } = req.body;
+	const { intentName, intentDescription, intentAnswer, intentId } = req.body;
 	const auth = await checkReqAuth(req, database);
 	if (auth) {
 		await extendSession(req.cookies.username, req.cookies.sessionId, database);
 		const code = await updateIntent(
 			intentName,
 			intentDescription,
+			intentAnswer,
 			Number.parseInt(intentId),
 			database,
 		);

@@ -297,6 +297,15 @@ document.addEventListener("DOMContentLoaded", () => {
 					descInput.required = true;
 					descInput.textContent = intent.description;
 
+					const answerLabel = document.createElement("label");
+					answerLabel.textContent = "Answer:";
+					const answerInput = document.createElement("textarea");
+					answerInput.name = "intentAnswer";
+					answerInput.rows = 3;
+					answerInput.cols = 50;
+					answerInput.required = true;
+					answerInput.textContent = intent.answer;
+
 					// Hidden input to store item ID
 					const idInput = document.createElement("input");
 					idInput.type = "hidden";
@@ -322,6 +331,10 @@ document.addEventListener("DOMContentLoaded", () => {
 					form.appendChild(descLabel);
 					form.appendChild(document.createElement("br"));
 					form.appendChild(descInput);
+					form.appendChild(document.createElement("br"));
+					form.appendChild(answerLabel);
+					form.appendChild(document.createElement("br"));
+					form.appendChild(answerInput);
 					form.appendChild(document.createElement("br"));
 					form.appendChild(idInput);
 					form.appendChild(updateBtn);
@@ -405,6 +418,15 @@ document.addEventListener("DOMContentLoaded", () => {
 				descInput.required = true;
 				descInput.textContent = "";
 
+				const answerLabel = document.createElement("label");
+				answerLabel.textContent = "Answer:";
+				const answerInput = document.createElement("textarea");
+				answerInput.name = "intentAnswer";
+				answerInput.rows = 3;
+				answerInput.cols = 50;
+				answerInput.required = true;
+				answerInput.textContent = "";
+
 				// Hidden input to store item ID
 				const idInput = document.createElement("input");
 				idInput.type = "hidden";
@@ -424,6 +446,10 @@ document.addEventListener("DOMContentLoaded", () => {
 				form.appendChild(descLabel);
 				form.appendChild(document.createElement("br"));
 				form.appendChild(descInput);
+				form.appendChild(document.createElement("br"));
+				form.appendChild(answerLabel);
+				form.appendChild(document.createElement("br"));
+				form.appendChild(answerInput);
 				form.appendChild(document.createElement("br"));
 				form.appendChild(idInput);
 				form.appendChild(submitBtn);
