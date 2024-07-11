@@ -42,6 +42,10 @@ const firebaseConfig = {
 app = initializeApp(firebaseConfig);
 database = getDatabase(app);
 
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 const bot = new WhatsAppBot({
 	idInstance: process.env.ID_INSTANCE,
 	apiTokenInstance: process.env.API_TOKEN_INSTANCE,
@@ -117,6 +121,8 @@ bot.on("message", async (ctx) => {
 			role: "assistant",
 			content: message,
 		});
+
+		await sleep(2000);
 
 		await ctx.reply(message);
 	} catch (error) {
