@@ -12,7 +12,6 @@ const {
 	VECTOR_DB_NAMESPACE,
 } = require("../bot/constants");
 
-
 /**
  * Adds a new item to the database.
  *
@@ -38,7 +37,6 @@ async function addItem(name, description, database, index = null) {
 		});
 		await update(dbRef, { [ITEMS_DB]: items });
 		if (index !== null) {
-			await index.namespace(VECTOR_DB_NAMESPACE).deleteOne(String(id));
 			await index.namespace(VECTOR_DB_NAMESPACE).upsert([
 				{
 					id: String(id),
@@ -74,13 +72,7 @@ async function addItem(name, description, database, index = null) {
  * @param {object} [index=null] - The vector database index.
  * @return {Promise<number>} Returns 0 if the item was updated successfully, or 1 if an error occurred.
  */
-async function updateItem(
-	name,
-	description,
-	id,
-	database,
-	index = null,
-) {
+async function updateItem(name, description, id, database, index = null) {
 	dbRef = ref(database);
 	try {
 		code = 1;
@@ -102,8 +94,8 @@ async function updateItem(
 				process.env.EMBEDDING_MODEL,
 				process.env.GEMINI_TOKEN,
 				process.env.PROXY_URL,
-			)
-			await index.namespace(VECTOR_DB_NAMESPACE).deleteOne(String(id));
+			);
+
 			await index.namespace(VECTOR_DB_NAMESPACE).upsert([
 				{
 					id: String(id),
@@ -146,7 +138,11 @@ async function deleteItem(id, database, index = null) {
 		}
 		await update(dbRef, { [ITEMS_DB]: newItems });
 		if (index != null) {
-			await index.namespace(VECTOR_DB_NAMESPACE).deleteOne(String(id));
+			try {
+				await index.namespace(VECTOR_DB_NAMESPACE).deleteOne(String(id));
+			} catch (error) {
+				console.error("Error deleting item from vector database:", error);
+			}
 		}
 		return code;
 	} catch (error) {
