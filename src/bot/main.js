@@ -2,11 +2,7 @@ const WhatsAppBot = require("@green-api/whatsapp-bot");
 const { initializeApp } = require("firebase/app");
 const { getDatabase } = require("firebase/database");
 const { getGeminiResponse, getUserIntent } = require("./api");
-const {
-	HELP_MESSAGE,
-	RESET_MESSAGE,
-	INDEX_NAME,
-} = require("./constants");
+const { INDEX_NAME } = require("./constants");
 const {
 	resetUser,
 	getMessages,
@@ -17,6 +13,13 @@ const {
 	reminder,
 	getKItems,
 	getClassifierPrompt,
+	getReminderActivationTime,
+	getResponseDelay,
+	getStartMessage,
+	getHelpMessage,
+	getResetMessage,
+	getTopKItems,
+	getThreshold,
 } = require("./database");
 const { squeezeMessages, checkTrigger } = require("./utils");
 const { Pinecone } = require("@pinecone-database/pinecone");
@@ -41,7 +44,7 @@ app = initializeApp(firebaseConfig);
 database = getDatabase(app);
 
 function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
+	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 const bot = new WhatsAppBot({
@@ -52,19 +55,22 @@ const bot = new WhatsAppBot({
 bot.command("reset", async (ctx) => {
 	const userId = ctx.update.message.chat.id;
 	await resetUser(database, userId);
-	await ctx.reply(RESET_MESSAGE);
+	const resetMessage = await getResetMessage(database);
+	await ctx.reply(resetMessage);
 });
 
 bot.command("start", async (ctx) => {
 	const userId = ctx.update.message.chat.id;
+	const startMessage = await getStartMessage(database);
 	await resetUser(database, userId, [
-		{ role: "assistant", content: HELP_MESSAGE },
+		{ role: "assistant", content: startMessage },
 	]);
-	await ctx.reply(HELP_MESSAGE);
+	await ctx.reply(startMessage);
 });
 
 bot.command("help", async (ctx) => {
-	await ctx.reply(HELP_MESSAGE);
+	const helpMessage = await getHelpMessage(database);
+	await ctx.reply(helpMessage);
 });
 
 bot.on("message", async (ctx) => {
@@ -74,15 +80,25 @@ bot.on("message", async (ctx) => {
 		role: "user",
 		content: userMessage,
 	});
-	messages = await getMessages(database, userId);
-	messages = squeezeMessages(messages);
+	const messagesHistory = await getMessages(database, userId);
+	const messages = squeezeMessages(messagesHistory);
 	try {
-		const [systemPrompt, classifierPrompt, items, intents] =
+		const [topKItems, threshold] = await Promise.all([
+			getTopKItems(database),
+			getThreshold(database),
+		]);
+		const [systemPrompt, classifierPrompt, items, intents, responseDelay] =
 			await Promise.all([
 				getSystemPrompt(database),
 				getClassifierPrompt(database),
-				getKItems(JSON.stringify(messages), index),
+				getKItems(
+					JSON.stringify(squeezeMessages(messagesHistory, 8)),
+					topKItems,
+					threshold,
+					index,
+				),
 				getIntents(database),
+				getResponseDelay(database),
 			]);
 
 		const [intent, message] = await Promise.all([
@@ -120,7 +136,9 @@ bot.on("message", async (ctx) => {
 			content: message,
 		});
 
-		await sleep(2000);
+		if (responseDelay > 0) {
+			await sleep(responseDelay * 1000);
+		}
 
 		await ctx.reply(message);
 	} catch (error) {
@@ -135,6 +153,10 @@ bot.on("message", async (ctx) => {
 	}
 });
 
-setInterval(() => reminder(database), 60 * 1000);
+getReminderActivationTime(database).then((reminderTimeout) => {
+	if (reminderTimeout > 0) {
+		setInterval(() => reminder(database, reminderTimeout), 20 * 1000);
+	}
+});
 
 bot.launch();

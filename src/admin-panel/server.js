@@ -280,13 +280,13 @@ app.post("/update-settings", async (req, res) => {
 	const auth = await checkReqAuth(req, database);
 	if (auth) {
 		const code = await updateSettings(
-			responseDelay,
-			reminderActivationTime,
+			Number.parseFloat(responseDelay || 0),
+			Number.parseInt(reminderActivationTime || 0),
 			startMessage,
 			helpMessage,
 			resetMessage,
-			topKItems,
-			threshold,
+			Number.parseInt(topKItems),
+			Number.parseFloat(threshold),
 			database,
 		);
 		if (code === 0) {

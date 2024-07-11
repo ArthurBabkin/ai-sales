@@ -687,7 +687,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 				const responseDelayLabel = document.createElement("label");
 				responseDelayLabel.textContent =
-					"Response Delay (in seconds, empty to disable):";
+					"Response Delay (in seconds, 0 to disable):";
 				const responseDelayInput = document.createElement("input");
 				responseDelayInput.name = "responseDelay";
 				responseDelayInput.type = "number";
@@ -697,7 +697,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 				const reminderActivationTimeLabel = document.createElement("label");
 				reminderActivationTimeLabel.textContent =
-					"Reminder Activation Time (in minutes, leave empty to disable):";
+					"Reminder Activation Time (in minutes, 0 to disable):";
 				const reminderActivationTimeInput = document.createElement("input");
 				reminderActivationTimeInput.name = "reminderActivationTime";
 				reminderActivationTimeInput.type = "number";

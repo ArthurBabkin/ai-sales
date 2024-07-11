@@ -148,7 +148,7 @@ test("addMessage + getForgottenChats", async () => {
 		lastUpdate: date,
 	});
 
-	const forgottenChats3 = await getForgottenChats(db);
+	const forgottenChats3 = await getForgottenChats(db, 30 * 60 * 1000);
 	expect(forgottenChats3).toEqual({
 		user123: {
 			lastUpdate: date,
