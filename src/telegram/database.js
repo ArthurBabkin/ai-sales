@@ -130,6 +130,23 @@ async function addService(database, sellerId, userId) {
 	}
 }
 
+/**
+ * Resets the services in the database to an empty object.
+ *
+ * @param {object} database - The Firebase Realtime Database reference.
+ * @return {Promise<number>} Returns 0 if the reset was successful, 1 if there was an error.
+ */
+async function resetServices(database) {
+	dbRef = ref(database);
+	try {
+		await update(dbRef, { [SERVICES_DB]: {} });
+		return 0;
+	} catch (error) {
+		console.error("Error resetting services:", error);
+		return 1;
+	}
+}
+
 module.exports = {
 	getGroups,
 	addGroup,
@@ -137,4 +154,5 @@ module.exports = {
 	clearTriggers,
 	getServices,
 	addService,
+	resetServices,
 };
