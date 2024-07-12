@@ -155,7 +155,7 @@ bot.on("message", async (ctx) => {
 
 getReminderActivationTime(database).then((reminderTimeout) => {
 	if (reminderTimeout > 0) {
-		setInterval(() => reminder(database, reminderTimeout), 20 * 1000);
+		setInterval(() => reminder(database, reminderTimeout * 60 * 1000), 20 * 1000);
 	}
 });
 
