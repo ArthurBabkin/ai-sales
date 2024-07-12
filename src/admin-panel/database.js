@@ -9,6 +9,7 @@ const {
 	SYSTEM_PROMPT_DB,
 	CLASSIFIER_PROMPT_DB,
 	REMINDER_PROMPT_DB,
+	SETTINGS_DB,
 	VECTOR_DB_NAMESPACE,
 } = require("../bot/constants");
 
@@ -423,6 +424,13 @@ async function updateSystemPrompt(prompt, database) {
 	}
 }
 
+/**
+ * Updates the classifier prompt in the database.
+ *
+ * @param {string} prompt - The new classifier prompt.
+ * @param {object} database - The Firebase Realtime Database reference.
+ * @return {Promise<number>} Returns a Promise that resolves to 0 if the classifier prompt is successfully updated, or rejects with an error.
+ */
 async function updateClassifierPrompt(prompt, database) {
 	dbRef = ref(database);
 	try {
@@ -434,6 +442,13 @@ async function updateClassifierPrompt(prompt, database) {
 	}
 }
 
+/**
+ * Updates the reminder prompt in the database.
+ *
+ * @param {string} prompt - The new reminder prompt.
+ * @param {object} database - The Firebase Realtime Database reference.
+ * @return {Promise<number>} Returns 0 if the reminder prompt is successfully updated, 1 if there was an error.
+ */
 async function updateReminderPrompt(prompt, database) {
 	dbRef = ref(database);
 	try {
@@ -445,6 +460,45 @@ async function updateReminderPrompt(prompt, database) {
 	}
 }
 
+/**
+ * Updates the settings in the database.
+ *
+ * @param {number} reminderActivationTime - The time in minutes for the reminder activation.
+ * @param {string} startMessage - The start message.
+ * @param {string} helpMessage - The help message.
+ * @param {string} resetMessage - The reset message.
+ * @param {number} topKItems - The number of top items.
+ * @param {number} threshold - The threshold.
+ * @param {Object} database - The database object.
+ * @return {Promise<number>} A Promise that resolves to 0 if the settings were successfully updated, or 1 if an error occurred.
+ */
+async function updateSettings(
+	responseDelay,
+	reminderActivationTime,
+	startMessage,
+	helpMessage,
+	resetMessage,
+	topKItems,
+	threshold,
+	database,
+) {
+	dbRef = ref(database);
+	try {
+		await update(child(dbRef, SETTINGS_DB), {
+			responseDelay: responseDelay,
+			reminderActivationTime: reminderActivationTime,
+			startMessage: startMessage,
+			helpMessage: helpMessage,
+			resetMessage: resetMessage,
+			topKItems: topKItems,
+			threshold: threshold,
+		});
+		return 0;
+	} catch (error) {
+		console.error("Error updating settings:", error);
+		return 1;
+	}
+}
 /**
  * Checks the authentication status of a request.
  *
@@ -494,6 +548,7 @@ module.exports = {
 	addIntent,
 	updateIntent,
 	deleteIntent,
+	updateSettings,
 	checkAdmin,
 	getSessions,
 	addSession,

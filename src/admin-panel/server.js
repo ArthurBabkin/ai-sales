@@ -12,6 +12,7 @@ const {
 	addIntent,
 	updateIntent,
 	deleteIntent,
+	updateSettings,
 	checkAdmin,
 	addSession,
 	extendSession,
@@ -29,6 +30,7 @@ const {
 	getSystemPrompt,
 	getClassifierPrompt,
 	getReminderPrompt,
+	getSettings,
 } = require("../bot/database");
 const { INDEX_NAME } = require("../bot/constants");
 
@@ -93,6 +95,16 @@ app.get("/system-prompts", async (req, res) => {
 	if (auth) {
 		await extendSession(req.cookies.username, req.cookies.sessionId, database);
 		res.sendFile(path.join(__dirname, "public", "system-prompts.html"));
+	} else {
+		res.redirect("/auth");
+	}
+});
+
+app.get("/settings", async (req, res) => {
+	const auth = await checkReqAuth(req, database);
+	if (auth) {
+		await extendSession(req.cookies.username, req.cookies.sessionId, database);
+		res.sendFile(path.join(__dirname, "public", "settings.html"));
 	} else {
 		res.redirect("/auth");
 	}
@@ -252,6 +264,48 @@ app.get("/list-intents", async (req, res) => {
 		res.json({ intents: intents });
 	} else {
 		res.json({ intents: [] });
+	}
+});
+
+app.post("/update-settings", async (req, res) => {
+	const {
+		responseDelay,
+		reminderActivationTime,
+		startMessage,
+		helpMessage,
+		resetMessage,
+		topKItems,
+		threshold,
+	} = req.body;
+	const auth = await checkReqAuth(req, database);
+	if (auth) {
+		const code = await updateSettings(
+			Number.parseFloat(responseDelay || 0),
+			Number.parseInt(reminderActivationTime || 0),
+			startMessage,
+			helpMessage,
+			resetMessage,
+			Number.parseInt(topKItems),
+			Number.parseFloat(threshold),
+			database,
+		);
+		if (code === 0) {
+			res.json({ success: true });
+		} else {
+			res.json({ success: false });
+		}
+	} else {
+		res.json({ success: false });
+	}
+});
+
+app.get("/list-settings", async (req, res) => {
+	const auth = await checkReqAuth(req, database);
+	if (auth) {
+		const settings = await getSettings(database);
+		res.json({ settings: settings });
+	} else {
+		res.json({ settings: {} });
 	}
 });
 

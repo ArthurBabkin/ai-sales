@@ -9,8 +9,8 @@ const {
 	SYSTEM_PROMPT_DB,
 	CLASSIFIER_PROMPT_DB,
 	REMINDER_PROMPT_DB,
+	SETTINGS_DB,
 	REMINDER_LIMIT,
-	REMINDER_MESSAGE,
 	VECTOR_DB_NAMESPACE,
 } = require("./constants");
 const { getUserId } = require("./utils");
@@ -178,6 +178,12 @@ async function getSystemPrompt(database) {
 	}
 }
 
+/**
+ * Retrieves the classifier prompt from the given Firebase Realtime Database instance.
+ *
+ * @param {Object} database - The Firebase Realtime Database instance.
+ * @return {Promise<string>} A promise that resolves to the classifier prompt value.
+ */
 async function getClassifierPrompt(database) {
 	dbRef = ref(database);
 	try {
@@ -192,6 +198,12 @@ async function getClassifierPrompt(database) {
 	}
 }
 
+/**
+ * Retrieves the reminder prompt from the given Firebase Realtime Database instance.
+ *
+ * @param {Object} database - The Firebase Realtime Database instance.
+ * @return {Promise<string>} A promise that resolves to the reminder prompt, or an empty string if it does not exist.
+ */
 async function getReminderPrompt(database) {
 	dbRef = ref(database);
 	try {
@@ -207,6 +219,127 @@ async function getReminderPrompt(database) {
 }
 
 /**
+ * Retrieves the settings from the given Firebase Realtime Database instance.
+ *
+ * @param {Object} database - The Firebase Realtime Database instance.
+ * @return {Promise<Object>} A promise that resolves to an object containing the settings.
+ * If the settings do not exist, an empty object is returned.
+ */
+async function getSettings(database) {
+	dbRef = ref(database);
+	try {
+		const snapshot = await get(child(dbRef, SETTINGS_DB));
+		if (snapshot.exists()) {
+			return snapshot.val();
+		}
+		return {};
+	} catch (error) {
+		console.error("Error fetching settings:", error);
+		return {};
+	}
+}
+
+async function getReminderActivationTime(database) {
+	dbRef = ref(database);
+	try {
+		const snapshot = await get(
+			child(dbRef, `${SETTINGS_DB}/reminderActivationTime`),
+		);
+		if (snapshot.exists()) {
+			return Number.parseInt(snapshot.val());
+		}
+		return 0;
+	} catch (error) {
+		console.error("Error fetching reminder activation time:", error);
+		return 0;
+	}
+}
+
+async function getResponseDelay(database) {
+	dbRef = ref(database);
+	try {
+		const snapshot = await get(child(dbRef, `${SETTINGS_DB}/responseDelay`));
+		if (snapshot.exists()) {
+			return Number.parseFloat(snapshot.val());
+		}
+		return 0;
+	} catch (error) {
+		console.error("Error fetching response delay:", error);
+		return 0;
+	}
+}
+
+async function getStartMessage(database) {
+	dbRef = ref(database);
+	try {
+		const snapshot = await get(child(dbRef, `${SETTINGS_DB}/startMessage`));
+		if (snapshot.exists()) {
+			return snapshot.val();
+		}
+		return "";
+	} catch (error) {
+		console.error("Error fetching start message:", error);
+		return "";
+	}
+}
+
+async function getHelpMessage(database) {
+	dbRef = ref(database);
+	try {
+		const snapshot = await get(child(dbRef, `${SETTINGS_DB}/helpMessage`));
+		if (snapshot.exists()) {
+			return snapshot.val();
+		}
+		return "";
+	} catch (error) {
+		console.error("Error fetching help message:", error);
+		return "";
+	}
+}
+
+async function getResetMessage(database) {
+	dbRef = ref(database);
+	try {
+		const snapshot = await get(child(dbRef, `${SETTINGS_DB}/resetMessage`));
+		if (snapshot.exists()) {
+			return snapshot.val();
+		}
+		return "";
+	} catch (error) {
+		console.error("Error fetching reset message:", error);
+		return "";
+	}
+}
+
+async function getTopKItems(database) {
+	dbRef = ref(database);
+	try {
+		const snapshot = await get(child(dbRef, `${SETTINGS_DB}/topKItems`));
+		if (snapshot.exists()) {
+			return Number.parseInt(snapshot.val());
+		}
+		return 0;
+	} catch (error) {
+		console.error("Error fetching top K items:", error);
+		return 0;
+	}
+}
+
+async function getThreshold(database) {
+	dbRef = ref(database);
+	try {
+		const snapshot = await get(child(dbRef, `${SETTINGS_DB}/threshold`));
+		if (snapshot.exists()) {
+			return Number.parseFloat(snapshot.val());
+		}
+		return 0;
+	} catch (error) {
+		console.error("Error fetching threshold:", error);
+		return 0;
+	}
+}
+
+/**
  * Retrieves the forgotten chats from the given Firebase Realtime Database instance.
  *
  * @param {Object} database - The Firebase Realtime Database instance.
@@ -215,7 +348,7 @@ async function getReminderPrompt(database) {
  * no forgotten chats are found.
  * @throws {Error} If there is an error retrieving the chats from the database.
  */
-async function getForgottenChats(database) {
+async function getForgottenChats(database, reminderTimeout) {
 	dbRef = ref(database);
 	try {
 		const snapshot = await get(child(dbRef, CHATS_DB));
@@ -226,7 +359,7 @@ async function getForgottenChats(database) {
 			for (const chatId in chats) {
 				const chat = chats[chatId];
 				if (
-					chat.lastUpdate < curTimestamp - REMINDER_LIMIT &&
+					chat.lastUpdate < curTimestamp - reminderTimeout &&
 					!chat.reminderLast
 				) {
 					forgottenChats[chatId] = chat;
@@ -248,23 +381,26 @@ async function getForgottenChats(database) {
  * @param {object} index - The index to use for querying items.
  * @return {string} A JSON string representing the query response.
  */
-async function getKItems(message, index) {
+async function getKItems(message, topKItems, threshold, index) {
 	model = process.env.EMBEDDING_MODEL;
 	token = process.env.GEMINI_TOKEN;
 	proxy = process.env.PROXY_URL;
 	embedding = await getEmbedding(message, model, token, proxy);
 
-	// Getting query.
 	const queryResponse = await index.namespace(VECTOR_DB_NAMESPACE).query({
 		vector: embedding,
-		topK: TOP_K_ITEMS,
+		topK: topKItems,
 		includeMetadata: true,
 	});
 
 	items = [];
 	for (i = 0; i < queryResponse.matches.length; i++) {
+		if (queryResponse.matches[i].score < threshold) {
+			continue;
+		}
 		items.push(queryResponse.matches[i].metadata);
 	}
+
 	return items;
 }
 
@@ -274,14 +410,16 @@ async function getKItems(message, index) {
  * @param {Object} database - The database object to retrieve information from.
  * @return {Promise<void>} A promise that resolves once all reminders are sent.
  */
-async function reminder(database) {
-	const users = await getForgottenChats(database);
+async function reminder(database, reminderTimeout) {
+	const users = await getForgottenChats(database, reminderTimeout);
 	const systemPrompt = await getSystemPrompt(database);
 	const items = await getItems(database);
 	for (const user in users) {
 		const messages = users[user].messages;
 		const reminderPrompt = await getReminderPrompt(database);
+
 		messages.push({ role: "user", content: reminderPrompt });
+
 		const message = await getGeminiResponse(
 			messages,
 			process.env.GEMINI_MODEL,
@@ -289,12 +427,14 @@ async function reminder(database) {
 			process.env.PROXY_URL,
 			`${systemPrompt}\Items:\n${JSON.stringify(items)}`,
 		);
+
 		if (message === 1) {
 			console.error(
 				"Error generating reminder message. Proceeding with others",
 			);
 			continue;
 		}
+
 		const userId = `${user}@c.us`;
 		const url = `https://1103.api.green-api.com/waInstance${process.env.ID_INSTANCE}/sendMessage/${process.env.API_TOKEN_INSTANCE}`;
 		const payload = {
@@ -304,12 +444,14 @@ async function reminder(database) {
 		const headers = {
 			"Content-Type": "application/json",
 		};
+
 		try {
 			await axios.post(url, payload, { headers: headers });
 		} catch (error) {
 			console.error("Error sending reminder:", error);
 			continue;
 		}
+
 		await addMessage(database, userId, {
 			role: "user",
 			content: reminderPrompt,
@@ -338,6 +480,14 @@ module.exports = {
 	getSystemPrompt,
 	getClassifierPrompt,
 	getReminderPrompt,
+	getSettings,
+	getReminderActivationTime,
+	getResponseDelay,
+	getStartMessage,
+	getHelpMessage,
+	getResetMessage,
+	getTopKItems,
+	getThreshold,
 	getForgottenChats,
 	getKItems,
 	reminder,
