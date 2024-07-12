@@ -9,7 +9,9 @@ const {
 	addGroup,
 	removeGroup,
 	clearTriggers,
+	getServices,
 	addService,
+	resetServices,
 } = require("./database");
 
 const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
@@ -58,12 +60,34 @@ bot.command("unset_group", async (ctx) => {
 	}
 });
 
+bot.command("leader_board", async (ctx) => {
+	const services = await getServices(database);
+	if (Object.entries(services).length === 0) {
+		await ctx.reply("No services registered yet 🤷‍♀️");
+	} else {
+		message = "Leader board 🧐:\n";
+		for (const [key, value] of Object.entries(services)) {
+			message += `@${key}: ${value.length} clients served 🤪\n`;
+		}
+		await ctx.reply(message);
+	}
+});
+
+bot.command("reset_leader_board", async (ctx) => {
+	const code = await resetServices(database);
+	if (code === 0) {
+		await ctx.reply("Leader board reset 🫠");
+	} else {
+		await ctx.reply("Error resetting leader board 🤯");
+	}
+});
+
 bot.action(/pick:(.+)/, async (ctx) => {
 	const userId = ctx.match[1];
 	ctx.answerCbQuery();
 	const username = ctx.from.username;
-	await addService(database, ctx.from.id, userId);
-	await ctx.editMessageText(`@${username} picked ${userId}`);
+	await addService(database, username, userId);
+	await ctx.editMessageText(`@${username} picked ${userId} 🤩`);
 });
 
 const dbRef = ref(database, TRIGGERS_DB);
@@ -82,7 +106,7 @@ onValue(dbRef, async (snapshot) => {
 				const userId = getUserId(trigger.userId);
 				await bot.telegram.sendMessage(
 					groupId,
-					`Trigger activated!\nTrigger: ${trigger.trigger}\nUser: ${userId}`,
+					`🦅 Trigger activated! 😱\n🙈 Trigger: ${trigger.trigger} 🙃\n🐳 User: ${userId} 🌞`,
 					Markup.inlineKeyboard([
 						Markup.button.callback("Pick ✅", `pick:${userId}`),
 					]),

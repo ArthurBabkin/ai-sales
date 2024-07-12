@@ -29,9 +29,6 @@ const firebaseConfig = {
 	appId: process.env.APP_ID,
 };
 
-const { FORGOTTEN_CHAT_LIMIT } = require("../constants");
-const { or } = require("firebase/firestore");
-
 const CHATS_DB = "chatsTest/";
 const ITEMS_DB = "itemsTest/";
 const INTENTS_DB = "intentsTest/";
