@@ -92,11 +92,8 @@ document.addEventListener("DOMContentLoaded", () => {
 			.then((data) => {
 				const users = data.users;
 				userList.innerHTML = "";
-				for (const userId in users) {
-					const user = {
-						userId: userId,
-						description: users[userId],
-					};
+				for (i = 0; i < users.length; i++) {
+					const user = users[i];
 					// Create a form for each user
 					const form = document.createElement("form");
 					form.className = "form";
@@ -244,7 +241,7 @@ document.addEventListener("DOMContentLoaded", () => {
 					formData.forEach((value, key) => {
 						formObject[key] = value;
 					});
-					fetch("/update-user", {
+					fetch("/submit-user", {
 						method: "POST",
 						headers: {
 							"Content-Type": "application/json",
@@ -257,7 +254,7 @@ document.addEventListener("DOMContentLoaded", () => {
 								alert("User added successfully");
 								window.location.reload();
 							} else {
-								alert("User update failed");
+								alert("User add failed");
 							}
 						})
 						.catch((error) => {

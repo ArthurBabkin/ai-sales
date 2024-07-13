@@ -13,6 +13,7 @@ const {
 	updateIntent,
 	deleteIntent,
 	updateSettings,
+	addUser,
 	updateUser,
 	deleteUser,
 	checkAdmin,
@@ -207,6 +208,22 @@ app.get("/list-items", async (req, res) => {
 		res.json({ items: items });
 	} else {
 		res.json({ items: [] });
+	}
+});
+
+app.post("/submit-user", async (req, res) => {
+	const { userId, description } = req.body;
+	const auth = await checkReqAuth(req, database);
+	if (auth) {
+		await extendSession(req.cookies.username, req.cookies.sessionId, database);
+		const code = await addUser(userId, description, database);
+		if (code === 0) {
+			res.json({ success: true });
+		} else {
+			res.json({ success: false });
+		}
+	} else {
+		res.json({ success: false });
 	}
 });
 

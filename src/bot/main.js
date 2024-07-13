@@ -9,6 +9,7 @@ const {
 	addMessage,
 	addTrigger,
 	getIntents,
+	getUserDescription,
 	getSystemPrompt,
 	reminder,
 	getKItems,
@@ -87,19 +88,33 @@ bot.on("message", async (ctx) => {
 			getTopKItems(database),
 			getThreshold(database),
 		]);
-		const [systemPrompt, classifierPrompt, items, intents, responseDelay] =
-			await Promise.all([
-				getSystemPrompt(database),
-				getClassifierPrompt(database),
-				getKItems(
-					JSON.stringify(squeezeMessages(messagesHistory, 8)),
-					topKItems,
-					threshold,
-					index,
-				),
-				getIntents(database),
-				getResponseDelay(database),
-			]);
+		const [
+			systemPrompt,
+			classifierPrompt,
+			items,
+			intents,
+			responseDelay,
+			userDescription,
+		] = await Promise.all([
+			getSystemPrompt(database),
+			getClassifierPrompt(database),
+			getKItems(
+				JSON.stringify(squeezeMessages(messagesHistory, 8)),
+				topKItems,
+				threshold,
+				index,
+			),
+			getIntents(database),
+			getResponseDelay(database),
+			getUserDescription(database, userId),
+		]);
+
+		systemMessages = [`${systemPrompt}\nItems:\n${JSON.stringify(items)}`];
+		if (userDescription) {
+			systemMessages.push(
+				`This is a system message. From now, the chat begins. The user you are going to talk to is already known. Below is the information about him and instructions on how to behave with them:\n${userDescription}`,
+			);
+		}
 
 		const [intent, message] = await Promise.all([
 			getUserIntent(
@@ -115,7 +130,7 @@ bot.on("message", async (ctx) => {
 				process.env.GEMINI_MODEL,
 				process.env.GEMINI_TOKEN,
 				process.env.PROXY_URL,
-				`${systemPrompt}\nItems:\n${JSON.stringify(items)}`,
+				systemMessages,
 			),
 		]);
 
@@ -155,7 +170,10 @@ bot.on("message", async (ctx) => {
 
 getReminderActivationTime(database).then((reminderTimeout) => {
 	if (reminderTimeout > 0) {
-		setInterval(() => reminder(database, reminderTimeout * 60 * 1000), 20 * 1000);
+		setInterval(
+			() => reminder(database, reminderTimeout * 60 * 1000),
+			20 * 1000,
+		);
 	}
 });
 

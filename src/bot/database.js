@@ -162,26 +162,32 @@ async function getUsers(database) {
 	try {
 		const snapshot = await get(child(dbRef, USERS_DB));
 		if (snapshot.exists()) {
-			return snapshot.val() || {};
+			return snapshot.val() || [];
 		}
-		return {};
+		return [];
 	} catch (error) {
 		console.error("Error fetching users:", error);
-		return {};
+		return [];
 	}
 }
 
-async function getUser(database, userId) {
+async function getUserDescription(database, userId) {
 	dbRef = ref(database);
 	try {
-		const snapshot = await get(child(dbRef, `${USERS_DB}/${userId}`));
+		const snapshot = await get(child(dbRef, USERS_DB));
+		const processedUserId = getUserId(userId);
 		if (snapshot.exists()) {
-			return snapshot.val();
+			const users = snapshot.val() || [];
+			for (i = 0; i < users.length; i++) {
+				if (users[i].userId === processedUserId) {
+					return users[i].description;
+				}
+			}
 		}
-		return {};
+		return "";
 	} catch (error) {
 		console.error("Error fetching user:", error);
-		return {};
+		return "";
 	}
 }
 
@@ -505,7 +511,7 @@ module.exports = {
 	addTrigger,
 	getIntents,
 	getUsers,
-	getUser,
+	getUserDescription,
 	getSystemPrompt,
 	getClassifierPrompt,
 	getReminderPrompt,
