@@ -1,8 +1,8 @@
 const bcrypt = require("bcrypt");
-const { ref, update, get, child } = require("firebase/database");
+const { ref, update, get, child, set, remove } = require("firebase/database");
 const { ADMINS_DB, SESSIONS_DB, SESSION_TIMEOUT } = require("./constants");
 const { getEmbedding } = require("../bot/api");
-const { getItems, getIntents } = require("../bot/database");
+const { getItems, getIntents, getUsers } = require("../bot/database");
 const {
 	ITEMS_DB,
 	INTENTS_DB,
@@ -10,6 +10,7 @@ const {
 	CLASSIFIER_PROMPT_DB,
 	REMINDER_PROMPT_DB,
 	SETTINGS_DB,
+	USERS_DB,
 	VECTOR_DB_NAMESPACE,
 } = require("../bot/constants");
 
@@ -499,6 +500,58 @@ async function updateSettings(
 		return 1;
 	}
 }
+
+async function addUser(userId, description, database) {
+	dbRef = ref(database);
+	try {
+		users = await getUsers(database);
+		users.push({ userId: userId, description: description });
+		await update(dbRef, { [USERS_DB]: users });
+		return 0;
+	} catch (error) {
+		console.error("Error adding user:", error);
+		return 1;
+	}
+}
+
+async function updateUser(userId, description, database) {
+	dbRef = ref(database);
+	try {
+		users = await getUsers(database);
+		code = 1;
+		for (i = 0; i < users.length; i++) {
+			if (users[i].userId === userId) {
+				users[i].description = description;
+				await update(dbRef, { [USERS_DB]: users });
+				code = 0;
+				break;
+			}
+		}
+		return code;
+	} catch (error) {
+		console.error("Error updating user:", error);
+		return 1;
+	}
+}
+
+async function deleteUser(userId, database) {
+	dbRef = ref(database);
+	try {
+		users = await getUsers(database);
+		newUsers = []
+		for (i = 0; i < users.length; i++) {
+			if (users[i].userId !== userId) {
+				newUsers.push(users[i]);
+			} 
+		}
+		await update(dbRef, { [USERS_DB]: newUsers });
+		return 0;
+	} catch (error) {
+		console.error("Error deleting user:", error);
+		return 1;
+	}
+}
+
 /**
  * Checks the authentication status of a request.
  *
@@ -558,6 +611,9 @@ module.exports = {
 	updateSystemPrompt,
 	updateClassifierPrompt,
 	updateReminderPrompt,
+	addUser,
+	updateUser,
+	deleteUser,
 	checkReqAuth,
 	updateVectorDatabase,
 };

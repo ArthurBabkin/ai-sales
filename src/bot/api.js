@@ -16,11 +16,13 @@ async function getGeminiResponse(
 	modelName,
 	token,
 	proxy,
-	systemMessage = null,
+	systemMessages = null,
 ) {
 	newMessages = messages;
-	if (systemMessage != null) {
-		newMessages = [{ role: "user", content: systemMessage }].concat(messages);
+	if (systemMessages != null) {
+		for (i = systemMessages.length - 1; i >= 0; i--) {
+			newMessages = [{ role: "user", content: systemMessages[i] }].concat(newMessages);	
+		}
 	}
 	geminiMessages = [];
 	map = {
