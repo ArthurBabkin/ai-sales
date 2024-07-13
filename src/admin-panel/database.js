@@ -1,5 +1,5 @@
 const bcrypt = require("bcrypt");
-const { ref, update, get, child } = require("firebase/database");
+const { ref, update, get, child, set, remove } = require("firebase/database");
 const { ADMINS_DB, SESSIONS_DB, SESSION_TIMEOUT } = require("./constants");
 const { getEmbedding } = require("../bot/api");
 const { getItems, getIntents } = require("../bot/database");
@@ -10,6 +10,7 @@ const {
 	CLASSIFIER_PROMPT_DB,
 	REMINDER_PROMPT_DB,
 	SETTINGS_DB,
+	USERS_DB,
 	VECTOR_DB_NAMESPACE,
 } = require("../bot/constants");
 
@@ -499,6 +500,29 @@ async function updateSettings(
 		return 1;
 	}
 }
+
+async function updateUser(userId, description, database) {
+	dbRef = ref(database);
+	try {
+		await set(child(dbRef, `${USERS_DB}/${userId}`), description);
+		return 0;
+	} catch (error) {
+		console.error("Error updating user:", error);
+		return 1;
+	}
+}
+
+async function deleteUser(userId, database) {
+	dbRef = ref(database);
+	try {
+		await remove(child(dbRef, `${USERS_DB}/${userId}`));
+		return 0;
+	} catch (error) {
+		console.error("Error deleting user:", error);
+		return 1;
+	}
+}
+
 /**
  * Checks the authentication status of a request.
  *
@@ -558,6 +582,8 @@ module.exports = {
 	updateSystemPrompt,
 	updateClassifierPrompt,
 	updateReminderPrompt,
+	updateUser,
+	deleteUser,
 	checkReqAuth,
 	updateVectorDatabase,
 };

@@ -1,4 +1,3 @@
-const { TOP_K_ITEMS } = require("./constants");
 const { ref, get, set, child, update } = require("firebase/database");
 const axios = require("axios");
 const {
@@ -10,7 +9,7 @@ const {
 	CLASSIFIER_PROMPT_DB,
 	REMINDER_PROMPT_DB,
 	SETTINGS_DB,
-	REMINDER_LIMIT,
+	USERS_DB,
 	VECTOR_DB_NAMESPACE,
 } = require("./constants");
 const { getUserId } = require("./utils");
@@ -155,6 +154,34 @@ async function getIntents(database) {
 	} catch (error) {
 		console.error("Error fetching buyers:", error);
 		return [];
+	}
+}
+
+async function getUsers(database) {
+	dbRef = ref(database);
+	try {
+		const snapshot = await get(child(dbRef, USERS_DB));
+		if (snapshot.exists()) {
+			return snapshot.val() || {};
+		}
+		return {};
+	} catch (error) {
+		console.error("Error fetching users:", error);
+		return {};
+	}
+}
+
+async function getUser(database, userId) {
+	dbRef = ref(database);
+	try {
+		const snapshot = await get(child(dbRef, `${USERS_DB}/${userId}`));
+		if (snapshot.exists()) {
+			return snapshot.val();
+		}
+		return {};
+	} catch (error) {
+		console.error("Error fetching user:", error);
+		return {};
 	}
 }
 
@@ -477,6 +504,8 @@ module.exports = {
 	getTriggers,
 	addTrigger,
 	getIntents,
+	getUsers,
+	getUser,
 	getSystemPrompt,
 	getClassifierPrompt,
 	getReminderPrompt,

@@ -13,6 +13,8 @@ const {
 	updateIntent,
 	deleteIntent,
 	updateSettings,
+	updateUser,
+	deleteUser,
 	checkAdmin,
 	addSession,
 	extendSession,
@@ -31,6 +33,7 @@ const {
 	getClassifierPrompt,
 	getReminderPrompt,
 	getSettings,
+	getUsers,
 } = require("../bot/database");
 const { INDEX_NAME } = require("../bot/constants");
 
@@ -105,6 +108,15 @@ app.get("/settings", async (req, res) => {
 	if (auth) {
 		await extendSession(req.cookies.username, req.cookies.sessionId, database);
 		res.sendFile(path.join(__dirname, "public", "settings.html"));
+	} else {
+		res.redirect("/auth");
+	}
+});
+
+app.get("/users", async (req, res) => {
+	const auth = await checkReqAuth(req, database);
+	if (auth) {
+		res.sendFile(path.join(__dirname, "public", "users.html"));
 	} else {
 		res.redirect("/auth");
 	}
@@ -195,6 +207,48 @@ app.get("/list-items", async (req, res) => {
 		res.json({ items: items });
 	} else {
 		res.json({ items: [] });
+	}
+});
+
+app.post("/update-user", async (req, res) => {
+	const { userId, description } = req.body;
+	const auth = await checkReqAuth(req, database);
+	if (auth) {
+		await extendSession(req.cookies.username, req.cookies.sessionId, database);
+		const code = await updateUser(userId, description, database);
+		if (code === 0) {
+			res.json({ success: true });
+		} else {
+			res.json({ success: false });
+		}
+	} else {
+		res.json({ success: false });
+	}
+});
+
+app.post("/delete-user", async (req, res) => {
+	const { userId } = req.body;
+	const auth = await checkReqAuth(req, database);
+	if (auth) {
+		await extendSession(req.cookies.username, req.cookies.sessionId, database);
+		const code = await deleteUser(userId, database);
+		if (code === 0) {
+			res.json({ success: true });
+		} else {
+			res.json({ success: false });
+		}
+	} else {
+		res.json({ success: false });
+	}
+});
+
+app.get("/list-users", async (req, res) => {
+	const auth = await checkReqAuth(req, database);
+	if (auth) {
+		const users = await getUsers(database);
+		res.json({ users: users });
+	} else {
+		res.json({ users: [] });
 	}
 });
 

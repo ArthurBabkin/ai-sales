@@ -1,16 +1,25 @@
 document.addEventListener("DOMContentLoaded", () => {
+	const usersBtn = document.getElementById("usersBtn");
 	const itemsBtn = document.getElementById("itemsBtn");
 	const intentsBtn = document.getElementById("intentsBtn");
 	const systemPromptBtn = document.getElementById("systemPromptBtn");
 	const settingsBtn = document.getElementById("settingsBtn");
 	const adminPanelBtn = document.getElementById("adminPanelBtn");
 	const loginForm = document.getElementById("loginForm");
+	const userList = document.getElementById("userList");
 	const itemList = document.getElementById("itemList");
 	const intentList = document.getElementById("intentList");
 	const settings = document.getElementById("settings");
 	const systemPrompt = document.getElementById("systemPrompt");
 	const classifierPrompt = document.getElementById("classifierPrompt");
 	const reminderPrompt = document.getElementById("reminderPrompt");
+
+	if (usersBtn) {
+		usersBtn.addEventListener("click", (event) => {
+			event.preventDefault();
+			window.location.href = "/users";
+		});
+	}
 
 	if (itemsBtn) {
 		itemsBtn.addEventListener("click", (event) => {
@@ -75,6 +84,187 @@ document.addEventListener("DOMContentLoaded", () => {
 					}
 				});
 		});
+	}
+
+	if (userList) {
+		fetch("/list-users")
+			.then((response) => response.json())
+			.then((data) => {
+				const users = data.users;
+				userList.innerHTML = "";
+				for (const userId in users) {
+					const user = {
+						userId: userId,
+						description: users[userId],
+					};
+					// Create a form for each user
+					const form = document.createElement("form");
+					form.className = "form";
+
+					// User Name
+					const userIdLabel = document.createElement("label");
+					userIdLabel.textContent = "User ID:";
+					const userIdInput = document.createElement("input");
+					userIdInput.type = "text";
+					userIdInput.name = "userId";
+					userIdInput.value = user.userId;
+					userIdInput.required = true;
+
+					// User Description
+					const descLabel = document.createElement("label");
+					descLabel.textContent = "User Description:";
+					const descInput = document.createElement("textarea");
+					descInput.name = "description";
+					descInput.rows = 3;
+					descInput.cols = 50;
+					descInput.required = true;
+					descInput.textContent = user.description;
+
+					const updateBtn = document.createElement("input");
+					updateBtn.type = "submit";
+					updateBtn.value = "Update User";
+					updateBtn.className = "button";
+
+					const deleteBtn = document.createElement("input");
+					deleteBtn.type = "submit";
+					deleteBtn.value = "Delete User";
+					deleteBtn.className = "button";
+
+					form.appendChild(userIdLabel);
+					form.appendChild(document.createElement("br"));
+					form.appendChild(userIdInput);
+					form.appendChild(document.createElement("br"));
+					form.appendChild(descLabel);
+					form.appendChild(document.createElement("br"));
+					form.appendChild(descInput);
+					form.appendChild(document.createElement("br"));
+					form.appendChild(updateBtn);
+					form.appendChild(deleteBtn);
+					userList.appendChild(form);
+
+					// Add event listener to handle form submission
+					form.addEventListener("submit", (event) => {
+						event.preventDefault();
+						const formData = new FormData(form);
+						const formObject = {};
+						formData.forEach((value, key) => {
+							formObject[key] = value;
+						});
+
+						if (event.submitter === updateBtn) {
+							fetch("/update-user", {
+								method: "POST",
+								headers: {
+									"Content-Type": "application/json",
+								},
+								body: JSON.stringify(formObject),
+							})
+								.then((response) => response.json())
+								.then((data) => {
+									if (data.success) {
+										alert("User updated successfully");
+										window.location.reload();
+									} else {
+										alert("User update failed");
+									}
+								})
+								.catch((error) => {
+									console.error("Error:", error);
+									alert("An error occurred. Please try again later.");
+								});
+						} else if (event.submitter === deleteBtn) {
+							fetch("/delete-user", {
+								method: "POST",
+								headers: {
+									"Content-Type": "application/json",
+								},
+								body: JSON.stringify({ userId: formObject.userId }),
+							})
+								.then((response) => response.json())
+								.then((data) => {
+									if (data.success) {
+										alert("User deleted successfully");
+										window.location.reload();
+									} else {
+										alert("User deletion failed");
+									}
+								})
+								.catch((error) => {
+									console.error("Error:", error);
+									alert("An error occurred. Please try again later.");
+								});
+						}
+					});
+				}
+
+				// Create a form for each user
+				const form = document.createElement("form");
+				form.className = "form";
+
+				// User Name
+				const userIdLabel = document.createElement("label");
+				userIdLabel.textContent = "User ID:";
+				const userIdInput = document.createElement("input");
+				userIdInput.type = "text";
+				userIdInput.name = "userId";
+				userIdInput.value = "";
+				userIdInput.required = true;
+
+				// User Description
+				const descLabel = document.createElement("label");
+				descLabel.textContent = "User Description:";
+				const descInput = document.createElement("textarea");
+				descInput.name = "description";
+				descInput.rows = 3;
+				descInput.cols = 50;
+				descInput.required = true;
+				descInput.textContent = "";
+
+				const submitBtn = document.createElement("input");
+				submitBtn.type = "submit";
+				submitBtn.value = "Add User";
+				submitBtn.className = "button";
+
+				form.appendChild(userIdLabel);
+				form.appendChild(document.createElement("br"));
+				form.appendChild(userIdInput);
+				form.appendChild(document.createElement("br"));
+				form.appendChild(descLabel);
+				form.appendChild(document.createElement("br"));
+				form.appendChild(descInput);
+				form.appendChild(document.createElement("br"));
+				form.appendChild(submitBtn);
+				userList.appendChild(form);
+
+				// Add event listener to handle form submission
+				form.addEventListener("submit", (event) => {
+					event.preventDefault();
+					const formData = new FormData(form);
+					const formObject = {};
+					formData.forEach((value, key) => {
+						formObject[key] = value;
+					});
+					fetch("/update-user", {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify(formObject),
+					})
+						.then((response) => response.json())
+						.then((data) => {
+							if (data.success) {
+								alert("User added successfully");
+								window.location.reload();
+							} else {
+								alert("User update failed");
+							}
+						})
+						.catch((error) => {
+							alert("An error occurred. Please try again later.");
+						});
+				});
+			});
 	}
 
 	if (itemList) {
