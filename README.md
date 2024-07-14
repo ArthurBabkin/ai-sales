@@ -5,7 +5,31 @@ WhatsApp AI Assistant configurable for your needs
 
 ## About
 
-This project is a WhatsApp AI Assistant configurable for your needs. It allows you to create a personalized AI chatbot for your business. The AI is trained using a language model and can be configured through an Admin Panel. It also has a Telegram bot for managers, a CRM system, an option to edit all prompts, vector database for searching products, prompt construction based on results from vector database, automatic deletion of outdated data to the database, Prompt construction based on results from vector database, Reminder mechanism to bot, and more.
+This project is a WhatsApp AI Assistant configurable for your needs. It allows you to create a personalized AI chatbot for your business. The Service is set to use a language model on backend of WhatsApp chatbot and be configurable from Admin Panel. It also has a Telegram bot for managers, a CRM system, an option to edit all prompts, vector database for searching items, prompt construction based on results from vector database, automatic deletion of outdated data to the database, Prompt construction based on results from vector database, Reminder mechanism to bot, and more.
+
+## Core Features
+The project consists of 3 services: 
+
+### WhatsApp Bot
+The bot is used to communicate with clients, consult them on basic questions about your business, and report on predefined set of cases to the backend
+
+### Admin Panel
+The panel is used to configure the bot's behavior. Specifically:
+* Basic instructions in form of natural language
+* Items representing elements on which users ask questions
+* Scenarios to report to backend
+* Other configurations
+
+### Telegram Bot
+The bot can be added to group or channel, and it will report on activations of triggers described above. Managers who serve triggered clients are stored in leader board that can later be viewed to check who did what
+
+## Demo
+[The video](https://youtu.be/88xfGmy9_Xc?si=CppCALhMcOMEMb4H) with demo of basic functionality.
+
+## Deployed version
+WhatsApp bot is running on account +7 (964)-860-22-14
+Admin Panel can be accessed [here](https://ai-sales-ehzu.onrender.com)
+Telegram bot can be accessed [here](https://t.me/ai_sales_assistant_bot)
 
 ## Getting Started
 ### Prerequisites 
@@ -77,6 +101,13 @@ This will run all the services: WhatsApp Bot, Admin Panel, Telegram Bot. To stop
 pm2 stop all
 ```
 
+## Frameworks & Technologies
+* [Node.js](https://nodejs.org/en)
+* [Express.js](https://expressjs.com)
+* [Telegraf.js](https://telegraf.js.org)
+* [Green API](https://green-api.com)
+* [Gemini API](https://aistudio.google.com/app/)
+* [Firebase](https://console.firebase.google.com)
 
 [license-shield]: https://img.shields.io/github/license/othneildrew/Best-README-Template.svg?style=for-the-badge
 [license-url]: https://gitlab.pg.innopolis.university/n.zagainov/ai-sales/-/blob/main/LICENSE?ref_type=heads
