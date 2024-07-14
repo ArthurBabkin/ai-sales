@@ -108,6 +108,7 @@ pm2 stop all
 * [Green API](https://green-api.com)
 * [Gemini API](https://aistudio.google.com/app/)
 * [Firebase](https://console.firebase.google.com)
+* [Pinecone](https://app.pinecone.io/)
 
 [license-shield]: https://img.shields.io/github/license/othneildrew/Best-README-Template.svg?style=for-the-badge
 [license-url]: https://gitlab.pg.innopolis.university/n.zagainov/ai-sales/-/blob/main/LICENSE?ref_type=heads
