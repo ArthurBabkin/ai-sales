@@ -43,30 +43,30 @@ test("squeezeMessages", () => {
 	];
 	expect(squeezeMessages(messages)).toEqual(messages);
 
-  const messages2 = []
-  for (i = 0; i < 20; i++) {
-    messages2.push({
-      role: "user",
-      content: "message",
-    });
-    messages2.push({
-      role: "assistant",
-      content: "message",
-    });
-  }
+	const messages2 = []
+	for (i = 0; i < 20; i++) {
+		messages2.push({
+			role: "user",
+			content: "message",
+		});
+		messages2.push({
+			role: "assistant",
+			content: "message",
+		});
+	}
 
-  expect(squeezeMessages(messages2)).toEqual(messages2.slice(-30));
+	expect(squeezeMessages(messages2)).toEqual(messages2.slice(-30));
 
-  const messages3 = [
-    {
-      role: "user",
-      content: "message".repeat(500),
-    },
-    {
-      role: "assistant",
-      content: "message",
-    },
-  ]
+	const messages3 = [
+		{
+			role: "user",
+			content: "message".repeat(500),
+		},
+		{
+			role: "assistant",
+			content: "message",
+		},
+	]
 
-  expect(squeezeMessages(messages3)[0].content.length).toEqual(500 + 3);
+	expect(squeezeMessages(messages3)[0].content.length).toEqual(500 + 3);
 });

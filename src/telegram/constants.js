@@ -9,5 +9,8 @@ To begin our work, add me to the admin group, and type /set_group ✊
 
 GROUPS_DB = "groups/";
 SERVICES_DB = "services/"
+ONGOING_SERVICES_DB = "ongoing_services/"
 
-module.exports = { START_MESSAGE, GROUPS_DB, SERVICES_DB };
+SERVICE_TIMEOUT = 10 * 60 * 1000;
+
+module.exports = { START_MESSAGE, GROUPS_DB, SERVICES_DB, ONGOING_SERVICES_DB, SERVICE_TIMEOUT };

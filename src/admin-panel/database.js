@@ -277,6 +277,24 @@ async function checkAdmin(username, password, database) {
 	}
 }
 
+async function addAdmin(username, password, database) {
+	dbRef = ref(database);
+	try {
+		const snapshot = await get(child(dbRef, ADMINS_DB));
+		admins = [];
+		if (snapshot.exists()) {
+			admins = snapshot.val() || [];
+		}
+		admins.push({
+			username: username,
+			password: bcrypt.hashSync(password, 10),
+		});
+		await update(dbRef, { [ADMINS_DB]: admins });
+	} catch (error) {
+		console.error("Error adding admin:", error);
+	}
+}
+
 /**
  * Retrieves the sessions from the database.
  *
@@ -501,6 +519,14 @@ async function updateSettings(
 	}
 }
 
+/**
+ * Adds a new user to the database.
+ *
+ * @param {string} userId - The ID of the user to add.
+ * @param {string} description - The description of the new user.
+ * @param {Object} database - The Firebase Realtime Database instance.
+ * @return {number} Returns 0 if the user was successfully added, 1 if an error occurred.
+ */
 async function addUser(userId, description, database) {
 	dbRef = ref(database);
 	try {
@@ -514,6 +540,14 @@ async function addUser(userId, description, database) {
 	}
 }
 
+/**
+ * Updates the user's description in the database.
+ *
+ * @param {string} userId - The ID of the user to update.
+ * @param {string} description - The new description for the user.
+ * @param {Object} database - The Firebase Realtime Database instance.
+ * @return {number} Returns 0 if the user's description was successfully updated, 1 if an error occurred.
+ */
 async function updateUser(userId, description, database) {
 	dbRef = ref(database);
 	try {
@@ -534,6 +568,13 @@ async function updateUser(userId, description, database) {
 	}
 }
 
+/**
+ * Deletes a user from the database based on the provided user ID.
+ *
+ * @param {string} userId - The ID of the user to be deleted.
+ * @param {object} database - The database object.
+ * @return {Promise<number>} A Promise that resolves to 0 if the user is successfully deleted, or 1 if there is an error.
+ */
 async function deleteUser(userId, database) {
 	dbRef = ref(database);
 	try {
@@ -542,7 +583,7 @@ async function deleteUser(userId, database) {
 		for (i = 0; i < users.length; i++) {
 			if (users[i].userId !== userId) {
 				newUsers.push(users[i]);
-			} 
+			}
 		}
 		await update(dbRef, { [USERS_DB]: newUsers });
 		return 0;
@@ -604,6 +645,7 @@ module.exports = {
 	deleteIntent,
 	updateSettings,
 	checkAdmin,
+	addAdmin,
 	getSessions,
 	addSession,
 	extendSession,

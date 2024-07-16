@@ -4,9 +4,8 @@ stages:
 
 lint_biome:
   stage: lint
-  image: node:latest # Assuming Biome requires Node.js, adjust as necessary
+  image: harbor.pg.innopolis.university/docker-hub-cache/node:20
   script:
-    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
     - npm ci # Install dependencies if needed
     - npm run lint # Run linter
   only:
@@ -14,9 +13,8 @@ lint_biome:
 
 jest_test:
   stage: test
-  image: node:latest
+  image: harbor.pg.innopolis.university/docker-hub-cache/node:20
   script:
-    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
     - npm ci
     - npm run test
   only:

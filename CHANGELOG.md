@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+## 0.7.4
+### Added:
+- Interaction with CRM in Telegram Bot
+### Updated:
+- README.md instructions
+### Commits:
+- Enhance CRM & Instructions [`#37`](https://gitlab.pg.innopolis.university/n.zagainov/ai-sales/-/merge_requests/37)
+
 ## 0.7.3
 ### Added:
 - CRM system to the admin panel
