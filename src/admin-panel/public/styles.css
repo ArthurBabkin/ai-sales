@@ -7,7 +7,7 @@
     cursor: pointer;
     margin: 10px;
     transition: background-color 0.3s;
-    width: 150px; 
+    width: 150px;
     margin: 10px auto;
 }
 
@@ -24,7 +24,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh; 
+    min-height: 100vh;
 }
 
 .container {
@@ -37,7 +37,7 @@ body {
     text-align: center;
     display: flex;
     flex-direction: column;
-    justify-content: center; 
+    justify-content: center;
 }
 
 h1 {
@@ -49,7 +49,8 @@ h1 {
     margin: 20px 0;
 }
 
-button, .button {
+button,
+.button {
     background-color: #007BFF;
     color: white;
     border: none;
@@ -60,7 +61,8 @@ button, .button {
     transition: background-color 0.3s;
 }
 
-button:hover, .button:hover {
+button:hover,
+.button:hover {
     background-color: #0056b3;
 }
 
@@ -112,7 +114,8 @@ ul {
     background-color: #0056b3;
 }
 
-ul#intentList, ul#itemList {
+ul#intentList,
+ul#itemList {
     margin-top: 20px;
 }
 

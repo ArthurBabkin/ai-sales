@@ -164,7 +164,11 @@ bot.on("message", async (ctx) => {
 			content: "Sorry, an error occurred",
 		});
 
+		try {
 		await ctx.reply("Sorry, an error occurred");
+		} catch (error) {
+			console.error("Messages are not sent:", error);
+		}
 	}
 });
 

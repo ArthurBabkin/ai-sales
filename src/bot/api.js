@@ -15,13 +15,13 @@ async function getGeminiResponse(
 	messages,
 	modelName,
 	token,
-	proxy,
+	proxy = null,
 	systemMessages = null,
 ) {
 	newMessages = messages;
 	if (systemMessages != null) {
 		for (i = systemMessages.length - 1; i >= 0; i--) {
-			newMessages = [{ role: "user", content: systemMessages[i] }].concat(newMessages);	
+			newMessages = [{ role: "user", content: systemMessages[i] }].concat(newMessages);
 		}
 	}
 	geminiMessages = [];
@@ -36,8 +36,23 @@ async function getGeminiResponse(
 		});
 	}
 	const url = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${token}`;
-	const agent = new HttpsProxyAgent(proxy);
+	agent = null;
+	if (proxy) {
+		agent = new HttpsProxyAgent(proxy);
+	}
 	try {
+		if (!agent) {
+			return await axios({
+				method: "post",
+				url: url,
+				headers: {
+					"Content-Type": "application/json",
+				},
+				data: {
+					contents: geminiMessages,
+				},
+			});
+		}
 		const response = await axios({
 			method: "post",
 			url: url,
@@ -73,7 +88,7 @@ async function getUserIntent(
 	prompt,
 	modelName,
 	token,
-	proxy,
+	proxy = null,
 ) {
 	classificationIntents = [];
 	for (i = 0; i < intents.length; i++) {
@@ -101,7 +116,7 @@ async function getUserIntent(
  * @param {string} proxy - The proxy URL.
  * @return {Promise<Array<number>>} A promise that resolves to an array of numbers representing the embedding.
  */
-async function getEmbedding(text, modelName, token, proxy) {
+async function getEmbedding(text, modelName, token, proxy = null) {
 	try {
 		const data = {
 			model: `models/${modelName}`,
@@ -113,8 +128,21 @@ async function getEmbedding(text, modelName, token, proxy) {
 				],
 			},
 		};
-		agent = new HttpsProxyAgent(proxy);
+		agent = null;
+		if (proxy) {
+			agent = new HttpsProxyAgent(proxy);
+		}
 
+		if (!agent) {
+			const response = await axios({
+				method: "post",
+				url: `https://generativelanguage.googleapis.com/v1beta/models/embedding-001:embedContent?key=${token}`,
+				headers: { "Content-Type": "application/json" },
+				data: JSON.stringify(data),
+			});
+
+			return response.data.embedding.values;
+		}
 		const response = await axios({
 			method: "post",
 			url: `https://generativelanguage.googleapis.com/v1beta/models/embedding-001:embedContent?key=${token}`,
@@ -122,6 +150,7 @@ async function getEmbedding(text, modelName, token, proxy) {
 			data: JSON.stringify(data),
 			httpsAgent: agent,
 		});
+
 
 		return response.data.embedding.values;
 	} catch (error) {

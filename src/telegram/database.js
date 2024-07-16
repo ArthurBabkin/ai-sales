@@ -1,5 +1,5 @@
-const { ref, child, get, update } = require("firebase/database");
-const { GROUPS_DB, SERVICES_DB } = require("./constants");
+const { ref, child, get, update, remove, set } = require("firebase/database");
+const { GROUPS_DB, SERVICES_DB, ONGOING_SERVICES_DB, SERVICE_TIMEOUT } = require("./constants");
 const { TRIGGERS_DB } = require("../bot/constants");
 
 /**
@@ -147,6 +147,76 @@ async function resetServices(database) {
 	}
 }
 
+
+/**
+ * Adds an ongoing service to the database for a specific seller and user.
+ *
+ * @param {object} database - The Firebase Realtime Database reference.
+ * @param {string} sellerId - The ID of the seller.
+ * @param {string} userId - The ID of the user for the ongoing service.
+ * @return {Promise<number>} Returns 1 if the service was added successfully, 0 if there was an error.
+ */
+async function addOngoingService(database, sellerId, userId) {
+	dbRef = ref(database);
+	try {
+		await set(child(dbRef, ONGOING_SERVICES_DB + sellerId), [userId, Date.now()]);
+		return 1;
+	} catch (error) {
+		console.error("Error adding ongoing service:", error);
+		return 0;
+	}
+}
+
+/**
+ * Removes an ongoing service from the database for a specific user.
+ *
+ * @param {object} database - The Firebase Realtime Database reference.
+ * @param {string} sellerId - The ID of the seller for the ongoing service.
+ * @return {Promise<number>} Returns 1 if the service was removed successfully, 0 if there was an error.
+ */
+async function removeOngoingService(database, sellerId) {
+	dbRef = ref(database);
+	try {
+		await remove(child(dbRef, ONGOING_SERVICES_DB + sellerId));
+		return 1;
+	} catch (error) {
+		console.error("Error removing ongoing service:", error);
+		return 0;
+	}
+}
+
+async function getServedUser(database, sellerId) {
+	dbRef = ref(database);
+	try {
+		snapshot = await get(child(dbRef, ONGOING_SERVICES_DB + sellerId));
+		if (snapshot.exists()) {
+			return snapshot.val()[0];
+		}
+		return null;
+	} catch (error) {
+		console.error("Error getting served user:", error);
+		return null;
+	}
+}
+
+async function checkOngoingService(database, sellerId, userId = null) {
+	dbRef = ref(database);
+	try {
+		snapshot = await get(child(dbRef, ONGOING_SERVICES_DB + sellerId));
+		if (userId) {
+			console.log("Returning", snapshot.exists() && snapshot.val()[0] === userId);
+			return snapshot.exists() && snapshot.val()[0] === userId;
+		}
+
+		console.log("Returning", snapshot.exists() && Date.now() - snapshot.val()[1] < SERVICE_TIMEOUT);
+		return snapshot.exists() && Date.now() - snapshot.val()[1] < SERVICE_TIMEOUT;
+
+	} catch (error) {
+		console.error("Error checking ongoing service:", error);
+		return false;
+	}
+}
+
 module.exports = {
 	getGroups,
 	addGroup,
@@ -155,4 +225,8 @@ module.exports = {
 	getServices,
 	addService,
 	resetServices,
+	addOngoingService,
+	removeOngoingService,
+	getServedUser,
+	checkOngoingService,
 };

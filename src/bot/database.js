@@ -469,7 +469,7 @@ async function reminder(database, reminderTimeout) {
 		}
 
 		const userId = `${user}@c.us`;
-		const url = `https://1103.api.green-api.com/waInstance${process.env.ID_INSTANCE}/sendMessage/${process.env.API_TOKEN_INSTANCE}`;
+		const url = `https://${process.env.ID_INSTANCE.substring(0, 4)}.api.green-api.com/waInstance${process.env.ID_INSTANCE}/sendMessage/${process.env.API_TOKEN_INSTANCE}`;
 		const payload = {
 			chatId: userId,
 			message: message,

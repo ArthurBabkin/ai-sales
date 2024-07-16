@@ -82,7 +82,7 @@ PROXY_URL="YOUR_PROXY_URL"
 ```python
 TELEGRAM_TOKEN="YOUR_TELEGRAM_TOKEN"
 ```
-* Go to [Pinecone](https://app.pinecone.io/), create new index with 768 dimensions and cosine similarity criterion, add your API token to `.env`
+* Go to [Pinecone](https://app.pinecone.io/), create new index named `ai-sales` with 768 dimensions and cosine similarity criterion, add your API token to `.env`
 ```python
 PINECONE_TOKEN="YOUR_PINECONE_TOKEN"
 ```
@@ -100,6 +100,26 @@ This will run all the services: WhatsApp Bot, Admin Panel, Telegram Bot. To stop
 ```
 pm2 stop all
 ```
+
+## How to use
+### Admin Panel
+* Edit `src/admin-panel/add-admin.js and run 
+```
+npm run add-admin
+```
+to add new authorization to admin panel
+* Go to port your host (if running locally, `http://localhost:<YOUR_PORT>/`)
+* Configure System prompts for definition of behavior, intent detection, and reminder
+* Create new intents (e. g: "I want to buy", "I want to speak to the manager")
+* Optionally, add items on which your bot will assist users
+
+### WhatsApp Bot
+* Go to the chat with your bot
+* Test your configurations
+
+### Telegram Bot
+* To add trigger activation tracking, add telegram bot to the group of choice and type `/set_group`
+* Bot will stream activated triggers to this group and manage services made by admins
 
 ## Frameworks & Technologies
 * [Node.js](https://nodejs.org/en)
