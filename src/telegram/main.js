@@ -108,7 +108,6 @@ bot.command("finish", async (ctx) => {
 bot.action(/pick:(.+)/, async (ctx) => {
 	const username = ctx.from.username;
 	if (await checkOngoingService(database, username)) {
-		console.log("How am I here?");
 		await ctx.answerCbQuery("You already have an ongoing service");
 		return;
 	}

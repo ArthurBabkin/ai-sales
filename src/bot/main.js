@@ -143,7 +143,7 @@ bot.on("message", async (ctx) => {
 				return;
 			}
 		} catch (error) {
-			console.log("Error checking trigger:", error);
+			console.error("Error checking trigger:", error);
 		}
 
 		await addMessage(database, userId, {

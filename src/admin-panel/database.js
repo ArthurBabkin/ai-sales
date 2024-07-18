@@ -556,11 +556,15 @@ async function updateUser(userId, description, database) {
 		for (i = 0; i < users.length; i++) {
 			if (users[i].userId === userId) {
 				users[i].description = description;
-				await update(dbRef, { [USERS_DB]: users });
 				code = 0;
 				break;
 			}
 		}
+		if (code === 1) {
+			users.push({ userId: userId, description: description });
+			code = 0;
+		}
+		await update(dbRef, { [USERS_DB]: users });
 		return code;
 	} catch (error) {
 		console.error("Error updating user:", error);

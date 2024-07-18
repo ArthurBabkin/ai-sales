@@ -204,11 +204,8 @@ async function checkOngoingService(database, sellerId, userId = null) {
 	try {
 		snapshot = await get(child(dbRef, ONGOING_SERVICES_DB + sellerId));
 		if (userId) {
-			console.log("Returning", snapshot.exists() && snapshot.val()[0] === userId);
 			return snapshot.exists() && snapshot.val()[0] === userId;
 		}
-
-		console.log("Returning", snapshot.exists() && Date.now() - snapshot.val()[1] < SERVICE_TIMEOUT);
 		return snapshot.exists() && Date.now() - snapshot.val()[1] < SERVICE_TIMEOUT;
 
 	} catch (error) {
