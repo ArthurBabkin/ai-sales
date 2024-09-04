@@ -1,1 +1,1 @@
-
+We have created bot for B2B, where owner of business can customize his own bot for his business using prompts, thresholds, triggers, and RAG items in personal admin panel. Bot will be answering in WhatsApp and obtaining the history of messages with customer on existing the any trigger activated and send summary to telegram bot, where his real salers can see the status and summary of customers.
